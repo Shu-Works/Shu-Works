@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>人生タイムラプス | 写真でつづる、あなただけの自分史ムービー</title>
+  <meta name="description" content="幼少期から今までの写真を、タイムラプス動画にして贈るサービス。終活・長寿のお祝いに、人生そのものをプレゼントしませんか。" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+      color: #3a2d1f;
+      background: #fdf9f3;
+      line-height: 1.8;
+    }
+    header {
+      background: linear-gradient(135deg, #c89b6a 0%, #8a6240 100%);
+      color: #fff;
+      padding: 80px 20px 60px;
+      text-align: center;
+    }
+    header h1 {
+      font-size: 2.4rem;
+      margin-bottom: 16px;
+      letter-spacing: 0.05em;
+    }
+    header p.lead {
+      font-size: 1.1rem;
+      opacity: 0.95;
+    }
+    .cta-btn {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 14px 36px;
+      background: #fff;
+      color: #8a6240;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: transform 0.2s;
+    }
+    .cta-btn:hover { transform: translateY(-2px); }
+    section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 24px;
+    }
+    section h2 {
+      font-size: 1.8rem;
+      text-align: center;
+      margin-bottom: 12px;
+      color: #8a6240;
+    }
+    section h2::after {
+      content: "";
+      display: block;
+      width: 50px;
+      height: 2px;
+      background: #c89b6a;
+      margin: 12px auto 32px;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+      margin-top: 24px;
+    }
+    .feature-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .feature-card .icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+    .feature-card h3 {
+      color: #8a6240;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+    }
+    .steps {
+      counter-reset: step;
+      margin-top: 24px;
+    }
+    .step {
+      position: relative;
+      padding: 20px 20px 20px 70px;
+      background: #fff;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      background: #c89b6a;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    .step h3 { font-size: 1.05rem; color: #8a6240; margin-bottom: 4px; }
+    table.pricing {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    table.pricing th, table.pricing td {
+      padding: 14px 12px;
+      text-align: center;
+      border-bottom: 1px solid #f0e6d8;
+    }
+    table.pricing th {
+      background: #c89b6a;
+      color: #fff;
+      font-weight: normal;
+    }
+    table.pricing td.plan-name { font-weight: bold; color: #8a6240; }
+    table.pricing td.price { color: #b8453d; font-weight: bold; }
+    .target {
+      background: #f5ede0;
+      padding: 40px 24px;
+    }
+    .voice {
+      background: #fff;
+      border-left: 4px solid #c89b6a;
+      padding: 20px 24px;
+      margin-top: 16px;
+      font-style: italic;
+      border-radius: 0 8px 8px 0;
+    }
+    .voice .name {
+      display: block;
+      margin-top: 10px;
+      font-style: normal;
+      font-size: 0.9rem;
+      color: #8a6240;
+    }
+    footer {
+      background: #3a2d1f;
+      color: #fdf9f3;
+      text-align: center;
+      padding: 32px 20px;
+      font-size: 0.9rem;
+    }
+    footer p { margin-bottom: 8px; }
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.7rem; }
+      section h2 { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>人生タイムラプス</h1>
+    <p class="lead">幼い日の一枚から、今日の笑顔まで。<br />あなたの歩みを、一本のムービーに。</p>
+    <a href="#contact" class="cta-btn">無料相談・資料請求はこちら</a>
+  </header>
+
+  <section>
+    <h2>こんな想いに応えます</h2>
+    <div class="features">
+      <div class="feature-card">
+        <div class="icon">📷</div>
+        <h3>終活で残したい</h3>
+        <p>自分の人生を、家族や次世代へ「かたち」で遺したい方へ。</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🎁</div>
+        <h3>お祝いの贈り物に</h3>
+        <p>還暦・古希・喜寿・米寿…一生の節目に「想い出」を贈ります。</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">👨‍👩‍👧‍👦</div>
+        <h3>家族で共有したい</h3>
+        <p>動画ならスマホやテレビで、いつでも何度でも見返せます。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>サービスの流れ</h2>
+    <div class="steps">
+      <div class="step">
+        <h3>写真をお預かり</h3>
+        <p>紙焼き写真は郵送、デジタル写真は専用ページからアップロード。</p>
+      </div>
+      <div class="step">
+        <h3>デジタル化・修復</h3>
+        <p>色あせ・キズを丁寧に補正し、AI で高解像度に。</p>
+      </div>
+      <div class="step">
+        <h3>時系列に編集</h3>
+        <p>幼少期から現在まで、人生の流れに沿って配置します。</p>
+      </div>
+      <div class="step">
+        <h3>BGM・ナレーション挿入</h3>
+        <p>思い出の曲や、ご家族からのメッセージを添えられます。</p>
+      </div>
+      <div class="step">
+        <h3>納品</h3>
+        <p>DVD／Blu-ray／USB／オンライン視聴リンクからお選びいただけます。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>料金プラン</h2>
+    <table class="pricing">
+      <thead>
+        <tr>
+          <th>プラン</th>
+          <th>写真枚数</th>
+          <th>動画尺</th>
+          <th>価格（税込）</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="plan-name">ライト</td>
+          <td>〜50枚</td>
+          <td>約3分</td>
+          <td class="price">19,800円</td>
+        </tr>
+        <tr>
+          <td class="plan-name">スタンダード</td>
+          <td>〜150枚</td>
+          <td>約7分</td>
+          <td class="price">39,800円</td>
+        </tr>
+        <tr>
+          <td class="plan-name">プレミアム</td>
+          <td>〜300枚</td>
+          <td>約12分</td>
+          <td class="price">69,800円</td>
+        </tr>
+        <tr>
+          <td class="plan-name">オプション</td>
+          <td colspan="2">ナレーション・オーダーメイドBGM</td>
+          <td class="price">+9,800円〜</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="target">
+    <h2>お客様の声（イメージ）</h2>
+    <div class="voice">
+      「父の米寿のお祝いに贈りました。古い白黒写真からはじまり、孫との写真で終わるムービーに、家族みんなが涙しました。」
+      <span class="name">— 60代 ご長男様</span>
+    </div>
+    <div class="voice">
+      「終活の一環として、自分で依頼しました。アルバムを整理するきっかけにもなり、子どもたちに渡せる『最後の宿題』が出来ました。」
+      <span class="name">— 78歳 ご本人様</span>
+    </div>
+  </section>
+
+  <section id="contact">
+    <h2>お問い合わせ</h2>
+    <p style="text-align:center;">まずは無料相談から。サンプル動画も無料でお送りします。</p>
+    <p style="text-align:center; margin-top:20px;">
+      📞 0120-XXX-XXX（平日 10:00-18:00）<br />
+      ✉ info@jinsei-timelapse.example.jp
+    </p>
+    <p style="text-align:center; margin-top:24px;">
+      <a href="mailto:info@jinsei-timelapse.example.jp" class="cta-btn" style="background:#c89b6a; color:#fff;">メールで相談する</a>
+    </p>
+  </section>
+
+  <footer>
+    <p>人生タイムラプス｜写真でつづる自分史ムービー制作サービス</p>
+    <p>&copy; 2026 Jinsei Timelapse Project</p>
+  </footer>
+</body>
+</html>
