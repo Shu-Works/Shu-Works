@@ -28,7 +28,7 @@
 | プレースホルダ | 差し替え内容 |
 | --- | --- |
 | `example.jp` | 実際のドメイン（例：`jinsei-timelapse.jp`） |
-| `0120-XXX-XXX` | 実際の電話番号 |
+| `〔電話番号〕`（特商法表記内） | 実際の電話番号（特商法上必須。発信専用扱いとして 050 番号や個人携帯番号を記載） |
 | `info@example.jp` | 実際のメールアドレス |
 | `G-XXXXXXXXXX` | Google Analytics 4 の測定 ID |
 | `YOUR_FORM_ID` | Formspree のフォーム ID |
