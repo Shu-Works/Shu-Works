@@ -81,27 +81,32 @@
   - [ ] テスト案件 `JT-2026-0000` で一周リハーサル
 
 ### 2.3 動画制作パイプライン（コア技術）
-- [ ] 写真自動補正（AI 高解像度化・色補正）スクリプト整備
-- [ ] **【最重要】AI 中間フレーム補間（ブリッジング）の技術選定**
-  - [ ] 候補ツール比較：Runway Gen-3 / Kling / Luma Dream Machine / Sora / Stable Video Diffusion
-  - [ ] 「写真A → 写真B」の入力で、自然な変化映像を出力できるかの検証
-  - [ ] 顔の一貫性（同一人物として認識される）を保つためのワークフロー確立
-  - [ ] 年齢差が大きい写真間（例：5歳→20歳）の補間品質の検証
-  - [ ] **少ない素材（10枚程度）でも成立する制作テンプレート**の確立
-- [ ] **【想い出補完オプション】AI 画像生成パイプライン**
-  - [ ] 「前後の実写写真」を参照に、空白期間の姿を生成する手法の検証
-    （IP-Adapter / Face Swap + Inpainting / Img2Img など）
-  - [ ] 同一人物性を保つためのリファレンス設計（顔の特徴量保持）
-  - [ ] 「memory」マーク／淡い色調など、実写と区別する演出テンプレート
-  - [ ] ご家族との確認フロー（生成案を提示 → 修正 → 承認）の業務設計
-  - [ ] 「これは AI による想像です」と明示する同意書フォーマット
-- [ ] **チャプター字幕テンプレート**（「○歳 ライフイベント」フォーマット）
-- [ ] ヒアリングシート（人生の節目を整理するための質問票）
-- [ ] テンプレート動画素材（オープニング・エンディング・トランジション）
-- [ ] タイムラプス組み立てパイプライン（FFmpeg + AI 補間 + 字幕合成）
-- [ ] 編集者向け作業マニュアル
-- [ ] 品質チェックリスト（不自然な補間がないか、字幕誤りがないか）
-- [ ] 納品物管理（DVD / Blu-ray / USB / クラウドリンク）
+- [x] パイプライン全体設計・ツールスタック選定 → `docs/10-video-pipeline-overview.md`
+  - 月次コスト試算（直接費 約 3,200円/件、粗利率 92%）／月キャパシティ試算（月 5〜8 本）
+- [x] 写真自動補正（AI 高解像度化・色補正）ワークフロー → `docs/pipeline/01-photo-restoration.md`
+  - メイン：**Topaz Photo AI**（買切 約 3 万円）／補助：Adobe Photoshop
+- [x] **AI 中間フレーム補間（ブリッジング）の技術選定** → `docs/pipeline/02-ai-bridging.md`
+  - メイン：**Kling AI**（Start+End Frame 機能）／サブ：Luma Dream Machine
+  - プロンプトテンプレ（用途別）、失敗パターン 4 種への対処手順を完備
+- [x] **【想い出補完オプション】AI 画像生成パイプライン** → `docs/pipeline/03-memory-fill.md`
+  - メイン：**Midjourney + IP-Adapter**（顔特徴量保持）
+  - ご家族確認フロー（候補提示 → 修正 → 承認 → 動画化 → 演出付与）
+- [x] **チャプター字幕テンプレート**（「○歳 ライフイベント」フォーマット）→ `pipeline/04-editing-and-delivery.md` §3
+- [x] 制作用ヒアリングシート（人生の節目を整理）→ `docs/pipeline/05-hearing-sheet-production.md`
+- [x] テンプレート動画素材（オープニング・エンディング・トランジション）→ `pipeline/04-editing-and-delivery.md` §5
+- [x] タイムラプス組み立て手順（DaVinci Resolve）→ `pipeline/04-editing-and-delivery.md` §6
+- [x] 編集者向け作業マニュアル → `pipeline/04-editing-and-delivery.md` 全体
+- [x] 品質チェックリスト（15 項目）→ `pipeline/04-editing-and-delivery.md` §7
+- [x] 納品物管理（DVD / Blu-ray / USB / クラウドリンク）→ `pipeline/04-editing-and-delivery.md` §9-10
+- [ ] **パイロット制作 3 本の実施（公開前必須）**
+  - [ ] 1 本目：ご自身 or ご家族（全工程通し確認）
+  - [ ] 2 本目：高齢のご家族（古い写真の補正品質）
+  - [ ] 3 本目：お友達のお子様（年齢差大の補間品質）
+- [ ] 編集環境セットアップ
+  - [ ] DaVinci Resolve 無料版インストール＆テンプレ作成
+  - [ ] Topaz Photo AI 購入
+  - [ ] Kling AI / Luma Dream Machine サブスクリプション開始
+  - [ ] Midjourney サブスクリプション開始
 
 ### 2.4 顧客管理
 - [ ] CRM 導入（HubSpot Free / kintone など低コスト案）
