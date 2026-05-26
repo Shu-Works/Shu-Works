@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>サク索くん｜小規模工務店のためのLINE見積もり検索AI</title>
+  <meta name="description" content="従業員10名以下の小規模工務店向け。「山田さんの見積もりは？」とLINEで聞くだけで即答する、スマート右腕AI「サク索くん」。" />
+  <style>
+    :root {
+      --line-green: #06c755;
+      --line-green-dark: #04a548;
+      --bg: #f3f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --sub: #4b5563;
+      --accent: #2563eb;
+      --border: #e5e7eb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.7;
+    }
+    a { color: var(--accent); }
+    header {
+      background: linear-gradient(135deg, #06c755 0%, #04a548 100%);
+      color: #fff;
+      padding: 64px 20px 80px;
+      text-align: center;
+    }
+    header .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.18);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    header h1 {
+      font-size: clamp(28px, 5vw, 44px);
+      margin: 0 0 12px;
+      letter-spacing: 0.02em;
+    }
+    header p.lead {
+      font-size: clamp(15px, 2.2vw, 19px);
+      margin: 0 auto 32px;
+      max-width: 640px;
+      opacity: 0.95;
+    }
+    .cta {
+      display: inline-block;
+      background: #fff;
+      color: var(--line-green-dark);
+      font-weight: 700;
+      padding: 14px 36px;
+      border-radius: 999px;
+      text-decoration: none;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+      transition: transform 0.15s ease;
+    }
+    .cta:hover { transform: translateY(-2px); }
+    section {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 56px 20px;
+    }
+    section h2 {
+      font-size: clamp(22px, 3.5vw, 30px);
+      text-align: center;
+      margin: 0 0 8px;
+    }
+    section h2::after {
+      content: "";
+      display: block;
+      width: 48px;
+      height: 4px;
+      background: var(--line-green);
+      margin: 12px auto 0;
+      border-radius: 2px;
+    }
+    section .subtitle {
+      text-align: center;
+      color: var(--sub);
+      margin: 0 0 36px;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px 20px;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+    }
+    .feature-card .icon {
+      font-size: 40px;
+      margin-bottom: 8px;
+    }
+    .feature-card h3 {
+      font-size: 18px;
+      margin: 8px 0 6px;
+      color: var(--line-green-dark);
+    }
+    .feature-card p {
+      font-size: 14px;
+      color: var(--sub);
+      margin: 0;
+    }
+    .demo {
+      background: #eaf6f0;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    .bubble {
+      display: inline-block;
+      padding: 12px 16px;
+      border-radius: 16px;
+      margin: 6px 0;
+      max-width: 85%;
+      white-space: pre-line;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .bubble.user {
+      background: #c1f0c5;
+      float: right;
+      clear: both;
+      border-bottom-right-radius: 4px;
+    }
+    .bubble.bot {
+      background: #fff;
+      float: left;
+      clear: both;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .demo::after { content: ""; display: block; clear: both; }
+    .problems {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .problem {
+      background: #fff;
+      border-left: 4px solid var(--line-green);
+      padding: 16px 18px;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+    .pricing {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+    .plan {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 22px;
+      text-align: center;
+    }
+    .plan.recommended {
+      border-color: var(--line-green);
+      box-shadow: 0 8px 24px rgba(6,199,85,0.18);
+      position: relative;
+    }
+    .plan.recommended::before {
+      content: "おすすめ";
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--line-green);
+      color: #fff;
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+    .plan h3 { margin: 0 0 8px; font-size: 18px; }
+    .plan .price {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--line-green-dark);
+      margin: 8px 0;
+    }
+    .plan .price small {
+      font-size: 14px;
+      color: var(--sub);
+      font-weight: 400;
+    }
+    .plan ul {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0 0;
+      text-align: left;
+      font-size: 14px;
+    }
+    .plan li::before {
+      content: "✓ ";
+      color: var(--line-green);
+      font-weight: 700;
+    }
+    .cta-section {
+      background: #fff;
+      text-align: center;
+      padding: 56px 20px;
+      border-top: 1px solid var(--border);
+    }
+    .cta-section .cta {
+      background: var(--line-green);
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(6,199,85,0.32);
+    }
+    footer {
+      background: #1f2937;
+      color: #cbd5e1;
+      text-align: center;
+      padding: 24px 20px;
+      font-size: 13px;
+    }
+    footer small { display: block; margin-top: 4px; opacity: 0.7; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">10名以下の小規模工務店向け</div>
+  <h1>サク索くん</h1>
+  <p class="lead">「山田さんの見積もり、いくらだった？」<br/>LINEで聞くだけ、即答えるスマート右腕AI</p>
+  <a class="cta" href="#contact">無料モニターに申し込む</a>
+</header>
+
+<section>
+  <h2>こんなお悩み、ありませんか？</h2>
+  <p class="subtitle">小規模工務店の "あるある" を、サク索くんが解決します</p>
+  <div class="problems">
+    <div class="problem">📂 過去の見積書を探すのに毎回30分以上かかる</div>
+    <div class="problem">📞 現場の職人から「あの単価いくら？」と社長への電話が鳴り止まない</div>
+    <div class="problem">👤 社長の頭の中にしか情報がなく、不在時に現場が止まる</div>
+    <div class="problem">💻 業務システムを導入したが、結局誰も使わなかった</div>
+    <div class="problem">👵 高齢の職人さんが新しいアプリを覚えられない</div>
+    <div class="problem">📝 事務員がいないので奥様が毎日書類対応に追われている</div>
+  </div>
+</section>
+
+<section style="background:#fff; border-radius:20px;">
+  <h2>4つの機能で工務店をまるごとサポート</h2>
+  <p class="subtitle">全部、使い慣れたLINEで完結します</p>
+  <div class="features">
+    <div class="feature-card">
+      <div class="icon">🔍</div>
+      <h3>見積検索</h3>
+      <p>お客様名で聞くだけで、過去の見積もり内容をAIが即答</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📷</div>
+      <h3>写真日報</h3>
+      <p>現場写真を送るだけで、日報を自動作成・案件別に整理</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🎙</div>
+      <h3>音声議事録</h3>
+      <p>打ち合わせの録音から要点・宿題・期限を自動抽出</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">❓</div>
+      <h3>質問・FAQ</h3>
+      <p>社内ナレッジ・単価表・施工マニュアルにLINEから即アクセス</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>こんな感じで使えます</h2>
+  <p class="subtitle">実際のLINEトーク画面イメージ</p>
+  <div class="demo">
+    <div class="bubble user">山田健一の見積もりは？</div>
+    <div class="bubble bot">山田 健一 様宛てのお見積もり内容は以下の通りです。
+
+・工事名称：山田様邸 外壁・屋根塗装工事
+・見積金額（税込）：¥1,122,000
+・見積日：2025年6月1日（EST-2025-0601）
+・施工会社：株式会社 匠建工務店 埼玉営業所
+・工期：2025年7月14日〜8月8日（約18日間）
+
+詳細な内訳など、さらに詳しい情報が必要でしたらお気軽にお申し付けください！</div>
+  </div>
+</section>
+
+<section style="background:#fff; border-radius:20px;">
+  <h2>料金プラン</h2>
+  <p class="subtitle">小さな工務店でも続けやすい価格設定です</p>
+  <div class="pricing">
+    <div class="plan">
+      <h3>お試し</h3>
+      <div class="price">0円<small>／30日間</small></div>
+      <ul>
+        <li>1〜3名向け</li>
+        <li>見積検索のみ</li>
+        <li>最大50件まで</li>
+      </ul>
+    </div>
+    <div class="plan recommended">
+      <h3>スタンダード</h3>
+      <div class="price">4,980円<small>／月（税抜）</small></div>
+      <ul>
+        <li>〜5名向け</li>
+        <li>全機能利用可</li>
+        <li>案件数無制限</li>
+        <li>容量5GB</li>
+      </ul>
+    </div>
+    <div class="plan">
+      <h3>ビジネス</h3>
+      <div class="price">9,800円<small>／月（税抜）</small></div>
+      <ul>
+        <li>6〜10名向け</li>
+        <li>全機能利用可</li>
+        <li>容量30GB</li>
+        <li>優先サポート</li>
+      </ul>
+    </div>
+  </div>
+  <p style="text-align:center; margin-top:24px; font-size:13px; color:var(--sub);">
+    ※ 初期費用：データ取り込み支援パック 19,800円（過去見積書を最大100件までAI学習用に整備代行）
+  </p>
+</section>
+
+<div class="cta-section" id="contact">
+  <h2 style="margin-top:0;">まずは無料モニターでお試しください</h2>
+  <p style="color:var(--sub); max-width:540px; margin:8px auto 28px;">
+    現在、関東圏の小規模工務店さま <strong>10社限定</strong> で無料モニターを募集中です。
+  </p>
+  <a class="cta" href="mailto:info@example.com?subject=サク索くん モニター申込">無料モニターに申し込む</a>
+</div>
+
+<footer>
+  サク索くん｜小規模工務店のためのLINE見積もり検索AI
+  <small>© 2026 サク索くん運営事務局</small>
+</footer>
+
+</body>
+</html>
