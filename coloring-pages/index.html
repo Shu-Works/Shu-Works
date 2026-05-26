@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iro Nuri — Japanese Coloring Pages for Everyone</title>
+  <meta name="description" content="Discover beautifully crafted Japanese-inspired coloring pages. Instant PDF download. Mindfulness, nature, ukiyo-e, and more." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:     #1a1a2e;
+      --red:     #c0392b;
+      --blush:   #f8e8e8;
+      --cream:   #fdf8f2;
+      --gold:    #c9a84c;
+      --muted:   #6b6b7a;
+      --radius:  12px;
+    }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: var(--cream);
+      color: var(--ink);
+      line-height: 1.7;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 5%;
+      background: #fff;
+      border-bottom: 2px solid var(--blush);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-size: 1.4rem;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .logo span { color: var(--red); }
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 2rem;
+    }
+    nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--red); }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 5rem 5% 4rem;
+      background: linear-gradient(160deg, #fff 0%, var(--blush) 100%);
+      border-bottom: 1px solid #e8ddd5;
+    }
+    .hero-tag {
+      display: inline-block;
+      background: var(--blush);
+      border: 1px solid var(--red);
+      color: var(--red);
+      font-size: 0.8rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.3rem 1rem;
+      border-radius: 99px;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.25;
+      margin-bottom: 1.2rem;
+      color: var(--ink);
+    }
+    .hero h1 em {
+      font-style: normal;
+      color: var(--red);
+    }
+    .hero p {
+      max-width: 560px;
+      margin: 0 auto 2.4rem;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+    .btn-primary {
+      display: inline-block;
+      background: var(--red);
+      color: #fff;
+      padding: 0.85rem 2.4rem;
+      border-radius: var(--radius);
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: bold;
+      letter-spacing: 0.03em;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-primary:hover { background: #a93226; transform: translateY(-2px); }
+    .btn-secondary {
+      display: inline-block;
+      border: 2px solid var(--ink);
+      color: var(--ink);
+      padding: 0.8rem 2rem;
+      border-radius: var(--radius);
+      text-decoration: none;
+      font-size: 1rem;
+      margin-left: 1rem;
+      transition: background 0.2s;
+    }
+    .btn-secondary:hover { background: var(--ink); color: #fff; }
+    .hero-img {
+      margin-top: 3.5rem;
+      display: flex;
+      justify-content: center;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .sample-card {
+      width: 160px;
+      height: 200px;
+      border-radius: var(--radius);
+      background: #fff;
+      border: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      transition: transform 0.2s;
+    }
+    .sample-card:hover { transform: translateY(-6px); }
+    .sample-card span { font-size: 0.75rem; color: var(--muted); margin-top: 0.5rem; letter-spacing: 0.05em; }
+
+    /* ── SECTION COMMONS ── */
+    section { padding: 4.5rem 5%; }
+    .section-title {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+    }
+    .section-sub {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 3rem;
+      font-size: 0.95rem;
+    }
+    .divider {
+      width: 48px;
+      height: 3px;
+      background: var(--red);
+      margin: 0.8rem auto 0;
+      border-radius: 2px;
+    }
+
+    /* ── CATEGORIES ── */
+    #categories { background: #fff; }
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .cat-card {
+      background: var(--cream);
+      border: 1px solid #e0d8d0;
+      border-radius: var(--radius);
+      padding: 2rem 1.2rem;
+      text-align: center;
+      transition: box-shadow 0.2s, transform 0.2s;
+      cursor: default;
+    }
+    .cat-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.1); transform: translateY(-4px); }
+    .cat-icon { font-size: 2.4rem; margin-bottom: 0.8rem; }
+    .cat-card h3 { font-size: 1rem; margin-bottom: 0.3rem; }
+    .cat-card p { font-size: 0.82rem; color: var(--muted); }
+
+    /* ── HOW IT WORKS ── */
+    #how { background: var(--blush); }
+    .steps {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      justify-content: center;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .step {
+      flex: 1 1 200px;
+      text-align: center;
+      max-width: 220px;
+    }
+    .step-num {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--red);
+      color: #fff;
+      font-size: 1.3rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+    }
+    .step h3 { font-size: 1rem; margin-bottom: 0.4rem; }
+    .step p { font-size: 0.85rem; color: var(--muted); }
+
+    /* ── PRICING ── */
+    #pricing { background: #fff; }
+    .pricing-grid {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .plan {
+      border: 2px solid #e0d8d0;
+      border-radius: var(--radius);
+      padding: 2.5rem 2rem;
+      flex: 1 1 240px;
+      max-width: 280px;
+      text-align: center;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .plan:hover { border-color: var(--red); box-shadow: 0 6px 24px rgba(192,57,43,0.12); }
+    .plan.featured {
+      border-color: var(--red);
+      background: var(--blush);
+      position: relative;
+    }
+    .plan.featured::before {
+      content: "Most Popular";
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--red);
+      color: #fff;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.9rem;
+      border-radius: 99px;
+      white-space: nowrap;
+    }
+    .plan h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .plan .price { font-size: 2rem; font-weight: bold; color: var(--red); margin: 0.5rem 0; }
+    .plan .price small { font-size: 1rem; color: var(--muted); font-weight: normal; }
+    .plan ul { list-style: none; text-align: left; margin: 1.2rem 0 1.8rem; }
+    .plan ul li { font-size: 0.88rem; padding: 0.3rem 0; color: var(--muted); }
+    .plan ul li::before { content: "✓ "; color: var(--red); font-weight: bold; }
+    .plan a {
+      display: block;
+      background: var(--ink);
+      color: #fff;
+      padding: 0.7rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    .plan a:hover { background: var(--red); }
+    .plan.featured a { background: var(--red); }
+    .plan.featured a:hover { background: #a93226; }
+
+    /* ── WHY JAPANESE ── */
+    #why { background: var(--cream); }
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .why-card {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    .why-icon { font-size: 2rem; flex-shrink: 0; }
+    .why-card h3 { font-size: 1rem; margin-bottom: 0.3rem; }
+    .why-card p { font-size: 0.85rem; color: var(--muted); }
+
+    /* ── CTA BANNER ── */
+    .cta-banner {
+      background: var(--ink);
+      color: #fff;
+      text-align: center;
+      padding: 4rem 5%;
+    }
+    .cta-banner h2 { font-size: clamp(1.4rem, 3vw, 2rem); margin-bottom: 1rem; }
+    .cta-banner p { color: rgba(255,255,255,0.7); margin-bottom: 2rem; }
+    .btn-light {
+      display: inline-block;
+      background: #fff;
+      color: var(--ink);
+      padding: 0.85rem 2.4rem;
+      border-radius: var(--radius);
+      text-decoration: none;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    .btn-light:hover { background: var(--gold); color: #fff; }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 2rem 5%;
+      background: var(--ink);
+      border-top: 1px solid #2a2a3e;
+      color: rgba(255,255,255,0.45);
+      font-size: 0.82rem;
+    }
+
+    @media (max-width: 600px) {
+      nav ul { display: none; }
+      .btn-secondary { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">色<span>塗</span> · Iro Nuri</a>
+  <ul>
+    <li><a href="#categories">Collections</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">🌸 Made in Japan · Digital Download</div>
+  <h1>Color the Beauty of <em>Japan</em></h1>
+  <p>Beautifully detailed coloring pages inspired by Japanese nature, tradition, and art. Instant PDF download — print and relax, anywhere in the world.</p>
+  <a href="#pricing" class="btn-primary">Browse Collections</a>
+  <a href="#categories" class="btn-secondary">See Samples</a>
+
+  <div class="hero-img">
+    <div class="sample-card">🌸<span>Sakura</span></div>
+    <div class="sample-card">🗻<span>Fuji</span></div>
+    <div class="sample-card">🌊<span>Waves</span></div>
+    <div class="sample-card">🦋<span>Patterns</span></div>
+    <div class="sample-card">🏮<span>Festival</span></div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section id="categories">
+  <h2 class="section-title">Explore Collections</h2>
+  <div class="divider"></div>
+  <p class="section-sub">From serene Zen mandalas to playful kawaii characters</p>
+  <div class="cat-grid">
+    <div class="cat-card">
+      <div class="cat-icon">🌸</div>
+      <h3>Japanese Nature</h3>
+      <p>Sakura, autumn leaves, Fuji, bamboo & ocean waves</p>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon">🔷</div>
+      <h3>Traditional Patterns</h3>
+      <p>Asanoha, seigaiha, ichimatsu & auspicious motifs</p>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon">🎨</div>
+      <h3>Ukiyo-e Style</h3>
+      <p>Inspired by Hokusai, Hiroshige & classic woodblock art</p>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon">☯️</div>
+      <h3>Zen & Mindfulness</h3>
+      <p>Karesansui gardens, ink-wash scenes, mandalas</p>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon">🍣</div>
+      <h3>Japanese Food</h3>
+      <p>Sushi, ramen, wagashi sweets & more — fun for all ages</p>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon">🎀</div>
+      <h3>Kawaii & Anime</h3>
+      <p>Cute chibi characters, yuru-chara & pop-art style</p>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon">🍂</div>
+      <h3>Four Seasons</h3>
+      <p>Spring, summer, autumn & winter seasonal packs</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <h2 class="section-title">How It Works</h2>
+  <div class="divider"></div>
+  <p class="section-sub">Ready to color in just a few clicks</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Choose a Pack</h3>
+      <p>Browse collections and pick the theme that sparks joy.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Instant Download</h3>
+      <p>Receive a high-resolution PDF directly in your inbox.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Print & Color</h3>
+      <p>Print at home or at a local print shop. Use any medium — pencils, markers, watercolor.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <h3>Share & Repeat</h3>
+      <p>Share your artwork and come back each month for fresh designs.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <h2 class="section-title">Simple Pricing</h2>
+  <div class="divider"></div>
+  <p class="section-sub">No subscription required — pay once, print forever</p>
+  <div class="pricing-grid">
+
+    <div class="plan">
+      <h3>Single Page</h3>
+      <div class="price">$1.99</div>
+      <ul>
+        <li>1 high-res coloring page</li>
+        <li>Instant PDF download</li>
+        <li>Print as many times as you like</li>
+      </ul>
+      <a href="#">Get Started</a>
+    </div>
+
+    <div class="plan featured">
+      <h3>Theme Pack</h3>
+      <div class="price">$7.99 <small>/ pack</small></div>
+      <ul>
+        <li>5 pages per pack</li>
+        <li>Curated theme (e.g., Sakura)</li>
+        <li>Instant PDF download</li>
+        <li>Unlimited personal prints</li>
+      </ul>
+      <a href="#">Get This Pack</a>
+    </div>
+
+    <div class="plan">
+      <h3>Monthly Subscription</h3>
+      <div class="price">$4.99 <small>/ mo</small></div>
+      <ul>
+        <li>New pack every month</li>
+        <li>Access to full back catalogue</li>
+        <li>Early access to new designs</li>
+        <li>Cancel anytime</li>
+      </ul>
+      <a href="#">Subscribe</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- WHY JAPANESE -->
+<section id="why">
+  <h2 class="section-title">Why Japanese Coloring?</h2>
+  <div class="divider"></div>
+  <p class="section-sub">More than art — a moment of calm in your day</p>
+  <div class="why-grid">
+    <div class="why-card">
+      <div class="why-icon">🎋</div>
+      <div>
+        <h3>Rooted in Tradition</h3>
+        <p>Every design draws from centuries of Japanese craftsmanship, from Edo-period patterns to contemporary illustration.</p>
+      </div>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🧘</div>
+      <div>
+        <h3>Mindfulness by Design</h3>
+        <p>Intricate lines and natural motifs are proven to reduce stress and bring focus — a moving meditation.</p>
+      </div>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🖨️</div>
+      <div>
+        <h3>Print-Ready Quality</h3>
+        <p>All pages are delivered at 300 DPI — crisp, clean lines that look beautiful on any standard paper size.</p>
+      </div>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🌍</div>
+      <div>
+        <h3>Loved Worldwide</h3>
+        <p>From New York to Paris, our pages bring Japanese aesthetics into homes around the globe.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<div class="cta-banner">
+  <h2>Start Coloring Today</h2>
+  <p>Download your first page free — no sign-up required.</p>
+  <a class="btn-light" href="#">Get a Free Sample</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2025 Iro Nuri · Japanese Coloring Pages · All rights reserved</p>
+  <p style="margin-top:0.4rem;">Designed with 🌸 in Japan</p>
+</footer>
+
+</body>
+</html>
