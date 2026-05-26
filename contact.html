@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>お問い合わせ｜人生タイムラプス</title>
+  <meta name="description" content="人生タイムラプス（AI 自分史ムービー制作サービス）への無料相談・資料請求・サンプル動画のお問い合わせはこちらから。" />
+  <link rel="canonical" href="https://example.jp/contact.html" />
+  <link rel="stylesheet" href="assets/style.css" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="お問い合わせ｜人生タイムラプス" />
+  <meta property="og:description" content="無料相談・資料請求はこちらから。サンプル動画も無料でお送りします。" />
+  <meta property="og:url" content="https://example.jp/contact.html" />
+  <meta property="og:site_name" content="人生タイムラプス" />
+  <meta property="og:locale" content="ja_JP" />
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="inner">
+    <a href="index.html" class="brand">人生タイムラプス</a>
+    <ul>
+      <li><a href="index.html#about">サービス</a></li>
+      <li><a href="index.html#flow">制作の流れ</a></li>
+      <li><a href="index.html#price">料金</a></li>
+      <li><a href="faq.html">よくある質問</a></li>
+      <li><a href="contact.html">お問い合わせ</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="page-header">
+  <h1>お問い合わせ</h1>
+  <p>無料相談・資料請求・サンプル動画のお申込みはこちらから。<br />原則 2 営業日以内にご返信いたします。</p>
+</header>
+
+<section>
+  <!--
+    フォーム送信は Formspree を利用する想定。
+    本番公開時は action 属性を実際のエンドポイントに差し替えてください。
+    例：action="https://formspree.io/f/xxxxxxx"
+
+    Formspree 以外の選択肢：
+    - Google Forms（無料／集計しやすい）
+    - Netlify Forms（Netlify ホスティング時）
+    - 自前バックエンド（メール送信 API）
+  -->
+  <form class="contact-form"
+        action="https://formspree.io/f/YOUR_FORM_ID"
+        method="POST"
+        novalidate>
+
+    <div class="field">
+      <label for="name">お名前<span class="required">必須</span></label>
+      <input type="text" id="name" name="name" required autocomplete="name" />
+    </div>
+
+    <div class="field">
+      <label for="kana">フリガナ</label>
+      <input type="text" id="kana" name="kana" autocomplete="name" />
+    </div>
+
+    <div class="field">
+      <label for="email">メールアドレス<span class="required">必須</span></label>
+      <input type="email" id="email" name="email" required autocomplete="email" />
+      <p class="help">2 営業日以内にこちらのアドレスへご返信いたします。</p>
+    </div>
+
+    <div class="field">
+      <label for="tel">お電話番号</label>
+      <input type="tel" id="tel" name="tel" autocomplete="tel" placeholder="090-XXXX-XXXX" />
+      <p class="help">お電話でのご相談をご希望の場合のみ。</p>
+    </div>
+
+    <div class="field">
+      <label for="purpose">ご相談の目的<span class="required">必須</span></label>
+      <select id="purpose" name="purpose" required>
+        <option value="">選択してください</option>
+        <option value="self_shukatsu">自分の終活として制作したい</option>
+        <option value="gift_celebration">家族への長寿のお祝いに贈りたい</option>
+        <option value="gift_memorial">葬儀・法要・偲ぶ会で使いたい</option>
+        <option value="sample_request">サンプル動画を見てから検討したい</option>
+        <option value="partnership">提携・代理店についての相談</option>
+        <option value="other">その他</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="plan">ご検討中のプラン</label>
+      <select id="plan" name="plan">
+        <option value="">まだ決めていない</option>
+        <option value="light">ライト（10〜15枚／約3分／19,800円）</option>
+        <option value="standard">スタンダード（16〜25枚／約7分／39,800円）</option>
+        <option value="premium">プレミアム（26〜40枚／約12分／69,800円）</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="ai_supplement">「想い出補完オプション」について</label>
+      <select id="ai_supplement" name="ai_supplement">
+        <option value="">選択してください（任意）</option>
+        <option value="interested">興味がある／詳しく知りたい</option>
+        <option value="not_now">いまは不要</option>
+        <option value="undecided">よくわからない</option>
+      </select>
+      <p class="help">写真がない時期を AI で補完するオプションです。</p>
+    </div>
+
+    <div class="field">
+      <label for="message">ご相談内容・ご質問<span class="required">必須</span></label>
+      <textarea id="message" name="message" required placeholder="ご相談したい内容を自由にお書きください。&#10;例：母の米寿祝いに贈りたいと考えています。写真は20枚ほどあります。サンプルを見てから決めたいです。"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="referrer">当サービスをどこでお知りになりましたか？</label>
+      <select id="referrer" name="referrer">
+        <option value="">選択してください（任意）</option>
+        <option value="google">検索（Google・Yahoo!）</option>
+        <option value="sns">SNS（YouTube・Instagram・TikTok 等）</option>
+        <option value="referral">知人・ご家族の紹介</option>
+        <option value="partner">提携先（葬儀社・写真館・介護施設等）</option>
+        <option value="media">新聞・雑誌・テレビ</option>
+        <option value="other">その他</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>
+        <input type="checkbox" name="privacy_agreement" required />
+        <a href="#" target="_blank" rel="noopener">プライバシーポリシー</a> に同意します<span class="required">必須</span>
+      </label>
+    </div>
+
+    <!-- ボットスパム対策：人間には見えないハニーポット -->
+    <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" />
+
+    <!-- 送信後リダイレクト先 -->
+    <input type="hidden" name="_next" value="https://example.jp/thanks.html" />
+
+    <!-- 件名（メール通知用） -->
+    <input type="hidden" name="_subject" value="【人生タイムラプス】お問い合わせ" />
+
+    <button type="submit">送信する</button>
+  </form>
+
+  <p style="text-align:center; margin-top:32px; font-size:0.95rem;">
+    フォームでのお問い合わせが難しい場合は、お電話やメールでも承ります。
+  </p>
+  <p style="text-align:center; margin-top:12px;">
+    📞 0120-XXX-XXX（平日 10:00-18:00）<br />
+    ✉ info@example.jp
+  </p>
+
+  <p style="text-align:center; margin-top:24px;">
+    <a href="index.html" class="back-link">← トップページへ戻る</a>
+  </p>
+</section>
+
+<footer>
+  <p>人生タイムラプス｜写真でつづる自分史ムービー制作サービス</p>
+  <div class="legal-links">
+    <a href="index.html">トップ</a>
+    <a href="faq.html">よくある質問</a>
+    <a href="contact.html">お問い合わせ</a>
+  </div>
+  <p>&copy; 2026 Jinsei Timelapse Project</p>
+</footer>
+
+</body>
+</html>

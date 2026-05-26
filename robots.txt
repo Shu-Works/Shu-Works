@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /thanks.html
+
+# 本番公開時にドメインを実際のものに置き換えてください
+Sitemap: https://example.jp/sitemap.xml

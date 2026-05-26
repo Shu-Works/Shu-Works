@@ -3,357 +3,306 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>人生タイムラプス | 写真でつづる、あなただけの自分史ムービー</title>
-  <meta name="description" content="幼少期から今までの写真を、タイムラプス動画にして贈るサービス。終活・長寿のお祝いに、人生そのものをプレゼントしませんか。" />
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
-      color: #3a2d1f;
-      background: #fdf9f3;
-      line-height: 1.8;
-    }
-    header {
-      background: linear-gradient(135deg, #c89b6a 0%, #8a6240 100%);
-      color: #fff;
-      padding: 80px 20px 60px;
-      text-align: center;
-    }
-    header h1 {
-      font-size: 2.4rem;
-      margin-bottom: 16px;
-      letter-spacing: 0.05em;
-    }
-    header p.lead {
-      font-size: 1.1rem;
-      opacity: 0.95;
-    }
-    .cta-btn {
-      display: inline-block;
-      margin-top: 28px;
-      padding: 14px 36px;
-      background: #fff;
-      color: #8a6240;
-      border-radius: 999px;
-      text-decoration: none;
-      font-weight: bold;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      transition: transform 0.2s;
-    }
-    .cta-btn:hover { transform: translateY(-2px); }
-    section {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 60px 24px;
-    }
-    section h2 {
-      font-size: 1.8rem;
-      text-align: center;
-      margin-bottom: 12px;
-      color: #8a6240;
-    }
-    section h2::after {
-      content: "";
-      display: block;
-      width: 50px;
-      height: 2px;
-      background: #c89b6a;
-      margin: 12px auto 32px;
-    }
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 24px;
-      margin-top: 24px;
-    }
-    .feature-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 28px 20px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
-    .feature-card .icon {
-      font-size: 2.5rem;
-      margin-bottom: 12px;
-    }
-    .feature-card h3 {
-      color: #8a6240;
-      margin-bottom: 10px;
-      font-size: 1.1rem;
-    }
-    .steps {
-      counter-reset: step;
-      margin-top: 24px;
-    }
-    .step {
-      position: relative;
-      padding: 20px 20px 20px 70px;
-      background: #fff;
-      border-radius: 8px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    }
-    .step::before {
-      counter-increment: step;
-      content: counter(step);
-      position: absolute;
-      left: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 36px;
-      height: 36px;
-      background: #c89b6a;
-      color: #fff;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-    }
-    .step h3 { font-size: 1.05rem; color: #8a6240; margin-bottom: 4px; }
-    table.pricing {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 16px;
-      background: #fff;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    }
-    table.pricing th, table.pricing td {
-      padding: 14px 12px;
-      text-align: center;
-      border-bottom: 1px solid #f0e6d8;
-    }
-    table.pricing th {
-      background: #c89b6a;
-      color: #fff;
-      font-weight: normal;
-    }
-    table.pricing td.plan-name { font-weight: bold; color: #8a6240; }
-    table.pricing td.price { color: #b8453d; font-weight: bold; }
-    .target {
-      background: #f5ede0;
-      padding: 40px 24px;
-    }
-    .voice {
-      background: #fff;
-      border-left: 4px solid #c89b6a;
-      padding: 20px 24px;
-      margin-top: 16px;
-      font-style: italic;
-      border-radius: 0 8px 8px 0;
-    }
-    .voice .name {
-      display: block;
-      margin-top: 10px;
-      font-style: normal;
-      font-size: 0.9rem;
-      color: #8a6240;
-    }
-    footer {
-      background: #3a2d1f;
-      color: #fdf9f3;
-      text-align: center;
-      padding: 32px 20px;
-      font-size: 0.9rem;
-    }
-    footer p { margin-bottom: 8px; }
-    @media (max-width: 600px) {
-      header h1 { font-size: 1.7rem; }
-      section h2 { font-size: 1.4rem; }
-    }
-  </style>
+  <title>人生タイムラプス｜写真10枚から作るAI自分史ムービー</title>
+  <meta name="description" content="幼少期から今までの写真10枚から、AIが写真と写真の「つなぎ」を補間し、人生をなめらかな動画として残します。終活・還暦・古希・米寿のお祝いの贈り物に。" />
+  <meta name="keywords" content="自分史,動画,タイムラプス,AI,終活,還暦,古希,米寿,長寿祝い,メモリアルムービー" />
+  <link rel="canonical" href="https://example.jp/" />
+  <link rel="stylesheet" href="assets/style.css" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="人生タイムラプス｜写真10枚から作るAI自分史ムービー" />
+  <meta property="og:description" content="幼少期から今までの写真10枚から、AIが写真と写真の「つなぎ」を補間。あなたの人生を、一本の物語に。" />
+  <meta property="og:url" content="https://example.jp/" />
+  <meta property="og:site_name" content="人生タイムラプス" />
+  <meta property="og:locale" content="ja_JP" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="人生タイムラプス｜写真10枚から作るAI自分史ムービー" />
+  <meta name="twitter:description" content="あなたの人生を、一本の物語に。" />
+
+  <!-- 構造化データ (Service) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "人生タイムラプス",
+    "description": "幼少期から現在までの写真をお預かりし、AI による中間フレーム補間と専門編集者の手で、自分史ムービーを制作するサービス。",
+    "provider": {
+      "@type": "Organization",
+      "name": "人生タイムラプス",
+      "url": "https://example.jp/"
+    },
+    "areaServed": "JP",
+    "serviceType": "自分史ムービー制作",
+    "offers": [
+      { "@type": "Offer", "name": "ライトプラン", "price": "19800", "priceCurrency": "JPY" },
+      { "@type": "Offer", "name": "スタンダードプラン", "price": "39800", "priceCurrency": "JPY" },
+      { "@type": "Offer", "name": "プレミアムプラン", "price": "69800", "priceCurrency": "JPY" }
+    ]
+  }
+  </script>
+
+  <!-- Google Analytics 4 (測定ID は本番公開時に差し替え) -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script> -->
 </head>
 <body>
-  <header>
-    <h1>人生タイムラプス</h1>
-    <p class="lead">幼い日の一枚から、今日の笑顔まで。<br />あなたの歩みを、一本のムービーに。</p>
-    <a href="#contact" class="cta-btn">無料相談・資料請求はこちら</a>
-  </header>
 
-  <section>
-    <h2>「写真を並べるだけ」では、ありません</h2>
-    <p style="text-align:center; max-width:680px; margin:0 auto 24px;">
-      私たちがお作りするのは、紙芝居のようなスライドショーではありません。<br />
-      お預かりした <strong>実写の写真</strong> と写真の「つなぎ」を、<br />
-      最新の AI が <strong>自然な中間映像として補間</strong> することで、<br />
-      まるで本当に時が流れていくような、なめらかな自分史ムービーに仕上げます。
-    </p>
-    <div class="features">
-      <div class="feature-card">
-        <div class="icon">📷</div>
-        <h3>たった10枚から</h3>
-        <p>AI が「つなぎ」を生成するから、写真は10枚程度で十分。アルバムをひっくり返す必要はありません。</p>
-      </div>
-      <div class="feature-card">
-        <div class="icon">✨</div>
-        <h3>AI が時間をつなぐ</h3>
-        <p>写真と写真の間の空白を、AI が中間フレームとして自然に補間。動き出す人生。</p>
-      </div>
-      <div class="feature-card">
-        <div class="icon">📖</div>
-        <h3>人生の節目を字幕で</h3>
-        <p>「5歳 七五三」「20歳 成人式」「60歳 還暦」など、ライフイベントを物語として演出。</p>
-      </div>
-      <div class="feature-card">
-        <div class="icon">🕊️</div>
-        <h3>想い出補完オプション</h3>
-        <p>戦中戦後など写真がない時期も、前後の写真から AI が当時の姿を想像生成（ご希望時のみ）。</p>
-      </div>
+<nav class="site-nav">
+  <div class="inner">
+    <a href="index.html" class="brand">人生タイムラプス</a>
+    <ul>
+      <li><a href="#about">サービス</a></li>
+      <li><a href="#flow">制作の流れ</a></li>
+      <li><a href="#price">料金</a></li>
+      <li><a href="faq.html">よくある質問</a></li>
+      <li><a href="contact.html">お問い合わせ</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero">
+  <h1>人生タイムラプス</h1>
+  <p class="lead">幼い日の一枚から、今日の笑顔まで。<br />あなたの歩みを、一本のムービーに。</p>
+  <a href="contact.html" class="cta-btn">無料相談・資料請求はこちら</a>
+</header>
+
+<section id="about">
+  <h2>「写真を並べるだけ」では、ありません</h2>
+  <p style="text-align:center; max-width:680px; margin:0 auto 24px;">
+    私たちがお作りするのは、紙芝居のようなスライドショーではありません。<br />
+    お預かりした <strong>実写の写真</strong> と写真の「つなぎ」を、<br />
+    最新の AI が <strong>自然な中間映像として補間</strong> することで、<br />
+    まるで本当に時が流れていくような、なめらかな自分史ムービーに仕上げます。
+  </p>
+  <div class="features">
+    <div class="feature-card">
+      <div class="icon">📷</div>
+      <h3>たった10枚から</h3>
+      <p>AI が「つなぎ」を生成するから、写真は10枚程度で十分。アルバムをひっくり返す必要はありません。</p>
     </div>
-  </section>
-
-  <section>
-    <h2>こんな想いに応えます</h2>
-    <div class="features">
-      <div class="feature-card">
-        <div class="icon">📷</div>
-        <h3>終活で残したい</h3>
-        <p>自分の人生を、家族や次世代へ「かたち」で遺したい方へ。</p>
-      </div>
-      <div class="feature-card">
-        <div class="icon">🎁</div>
-        <h3>お祝いの贈り物に</h3>
-        <p>還暦・古希・喜寿・米寿…一生の節目に「想い出」を贈ります。</p>
-      </div>
-      <div class="feature-card">
-        <div class="icon">👨‍👩‍👧‍👦</div>
-        <h3>家族で共有したい</h3>
-        <p>動画ならスマホやテレビで、いつでも何度でも見返せます。</p>
-      </div>
+    <div class="feature-card">
+      <div class="icon">✨</div>
+      <h3>AI が時間をつなぐ</h3>
+      <p>写真と写真の間の空白を、AI が中間フレームとして自然に補間。動き出す人生。</p>
     </div>
-  </section>
-
-  <section>
-    <h2>サービスの流れ</h2>
-    <div class="steps">
-      <div class="step">
-        <h3>写真をお預かり</h3>
-        <p>紙焼き写真は郵送、デジタル写真は専用ページからアップロード。</p>
-      </div>
-      <div class="step">
-        <h3>デジタル化・修復</h3>
-        <p>色あせ・キズを丁寧に補正し、AI で高解像度に。</p>
-      </div>
-      <div class="step">
-        <h3>時系列に整理＋ヒアリング</h3>
-        <p>ご本人・ご家族にお話を伺い、人生の節目を確認しながら配置します。</p>
-      </div>
-      <div class="step">
-        <h3>AI で「つなぎ」を生成</h3>
-        <p>写真と写真の間を AI が中間映像として補間。本当に時が流れるような映像に。</p>
-      </div>
-      <div class="step">
-        <h3>節目の字幕＆BGM 挿入</h3>
-        <p>「○歳 入学式」などの字幕と、思い出の曲・ご家族のメッセージを添えます。</p>
-      </div>
-      <div class="step">
-        <h3>納品</h3>
-        <p>DVD／Blu-ray／USB／オンライン視聴リンクからお選びいただけます。</p>
-      </div>
+    <div class="feature-card">
+      <div class="icon">📖</div>
+      <h3>人生の節目を字幕で</h3>
+      <p>「5歳 七五三」「20歳 成人式」「60歳 還暦」など、ライフイベントを物語として演出。</p>
     </div>
-  </section>
-
-  <section>
-    <h2>料金プラン</h2>
-    <table class="pricing">
-      <thead>
-        <tr>
-          <th>プラン</th>
-          <th>写真枚数</th>
-          <th>動画尺</th>
-          <th>価格（税込）</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="plan-name">ライト</td>
-          <td>10〜15枚</td>
-          <td>約3分</td>
-          <td class="price">19,800円</td>
-        </tr>
-        <tr>
-          <td class="plan-name">スタンダード</td>
-          <td>16〜25枚</td>
-          <td>約7分</td>
-          <td class="price">39,800円</td>
-        </tr>
-        <tr>
-          <td class="plan-name">プレミアム</td>
-          <td>26〜40枚</td>
-          <td>約12分</td>
-          <td class="price">69,800円</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <h3 style="text-align:center; color:#8a6240; margin-top:36px; margin-bottom:12px;">オプション</h3>
-    <table class="pricing">
-      <thead>
-        <tr>
-          <th>オプション名</th>
-          <th>内容</th>
-          <th>価格（税込）</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="plan-name">想い出補完</td>
-          <td>写真がない時期を AI で想像生成（1シーン）</td>
-          <td class="price">+5,000円</td>
-        </tr>
-        <tr>
-          <td class="plan-name">ナレーション</td>
-          <td>ご本人/ご家族の語りを収録・編集</td>
-          <td class="price">+9,800円〜</td>
-        </tr>
-        <tr>
-          <td class="plan-name">オーダーBGM</td>
-          <td>思い出の曲・オリジナル楽曲制作</td>
-          <td class="price">+9,800円〜</td>
-        </tr>
-        <tr>
-          <td class="plan-name">高速納品</td>
-          <td>10営業日以内に納品</td>
-          <td class="price">+10,000円</td>
-        </tr>
-      </tbody>
-    </table>
-    <p style="text-align:center; max-width:680px; margin:24px auto 0; font-size:0.9rem; color:#6a5240;">
-      ※ 想い出補完シーンは、動画内で「memory」マーク等を付けて実写と明確に区別します。<br />
-      ご本人・ご家族の事前確認を経た上で組み込みますので、安心してご利用いただけます。
-    </p>
-  </section>
-
-  <section class="target">
-    <h2>お客様の声（イメージ）</h2>
-    <div class="voice">
-      「父の米寿のお祝いに贈りました。古い白黒写真からはじまり、孫との写真で終わるムービーに、家族みんなが涙しました。」
-      <span class="name">— 60代 ご長男様</span>
+    <div class="feature-card">
+      <div class="icon">🕊️</div>
+      <h3>想い出補完オプション</h3>
+      <p>戦中戦後など写真がない時期も、前後の写真から AI が当時の姿を想像生成（ご希望時のみ）。</p>
     </div>
-    <div class="voice">
-      「終活の一環として、自分で依頼しました。アルバムを整理するきっかけにもなり、子どもたちに渡せる『最後の宿題』が出来ました。」
-      <span class="name">— 78歳 ご本人様</span>
+  </div>
+</section>
+
+<section id="sample">
+  <h2>サンプル動画</h2>
+  <div class="video-wrap">
+    <!-- 本番公開時に YouTube 限定公開動画の埋め込みコードに差し替え -->
+    <span>サンプル動画は準備中です。<br />お問い合わせいただいた方に個別でお送りしています。</span>
+    <!--
+    <iframe src="https://www.youtube.com/embed/XXXXXXXXXXX"
+            title="人生タイムラプス サンプル動画"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
+            allowfullscreen></iframe>
+    -->
+  </div>
+</section>
+
+<section>
+  <h2>こんな想いに応えます</h2>
+  <div class="features">
+    <div class="feature-card">
+      <div class="icon">📷</div>
+      <h3>終活で残したい</h3>
+      <p>自分の人生を、家族や次世代へ「かたち」で遺したい方へ。</p>
     </div>
-  </section>
+    <div class="feature-card">
+      <div class="icon">🎁</div>
+      <h3>お祝いの贈り物に</h3>
+      <p>還暦・古希・喜寿・米寿…一生の節目に「想い出」を贈ります。</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">👨‍👩‍👧‍👦</div>
+      <h3>家族で共有したい</h3>
+      <p>動画ならスマホやテレビで、いつでも何度でも見返せます。</p>
+    </div>
+  </div>
+</section>
 
-  <section id="contact">
-    <h2>お問い合わせ</h2>
-    <p style="text-align:center;">まずは無料相談から。サンプル動画も無料でお送りします。</p>
-    <p style="text-align:center; margin-top:20px;">
-      📞 0120-XXX-XXX（平日 10:00-18:00）<br />
-      ✉ info@jinsei-timelapse.example.jp
-    </p>
-    <p style="text-align:center; margin-top:24px;">
-      <a href="mailto:info@jinsei-timelapse.example.jp" class="cta-btn" style="background:#c89b6a; color:#fff;">メールで相談する</a>
-    </p>
-  </section>
+<section id="flow">
+  <h2>サービスの流れ</h2>
+  <div class="steps">
+    <div class="step">
+      <h3>写真をお預かり</h3>
+      <p>紙焼き写真は郵送、デジタル写真は専用ページからアップロード。</p>
+    </div>
+    <div class="step">
+      <h3>デジタル化・修復</h3>
+      <p>色あせ・キズを丁寧に補正し、AI で高解像度に。</p>
+    </div>
+    <div class="step">
+      <h3>時系列に整理＋ヒアリング</h3>
+      <p>ご本人・ご家族にお話を伺い、人生の節目を確認しながら配置します。</p>
+    </div>
+    <div class="step">
+      <h3>AI で「つなぎ」を生成</h3>
+      <p>写真と写真の間を AI が中間映像として補間。本当に時が流れるような映像に。</p>
+    </div>
+    <div class="step">
+      <h3>節目の字幕＆BGM 挿入</h3>
+      <p>「○歳 入学式」などの字幕と、思い出の曲・ご家族のメッセージを添えます。</p>
+    </div>
+    <div class="step">
+      <h3>納品</h3>
+      <p>DVD／Blu-ray／USB／オンライン視聴リンクからお選びいただけます。</p>
+    </div>
+  </div>
+</section>
 
-  <footer>
-    <p>人生タイムラプス｜写真でつづる自分史ムービー制作サービス</p>
-    <p>&copy; 2026 Jinsei Timelapse Project</p>
-  </footer>
+<section id="price">
+  <h2>料金プラン</h2>
+  <table class="pricing">
+    <thead>
+      <tr>
+        <th>プラン</th>
+        <th>写真枚数</th>
+        <th>動画尺</th>
+        <th>価格（税込）</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="plan-name">ライト</td>
+        <td>10〜15枚</td>
+        <td>約3分</td>
+        <td class="price">19,800円</td>
+      </tr>
+      <tr>
+        <td class="plan-name">スタンダード</td>
+        <td>16〜25枚</td>
+        <td>約7分</td>
+        <td class="price">39,800円</td>
+      </tr>
+      <tr>
+        <td class="plan-name">プレミアム</td>
+        <td>26〜40枚</td>
+        <td>約12分</td>
+        <td class="price">69,800円</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 style="text-align:center; color:#8a6240; margin-top:36px; margin-bottom:12px;">オプション</h3>
+  <table class="pricing">
+    <thead>
+      <tr>
+        <th>オプション名</th>
+        <th>内容</th>
+        <th>価格（税込）</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="plan-name">想い出補完</td>
+        <td>写真がない時期を AI で想像生成（1シーン）</td>
+        <td class="price">+5,000円</td>
+      </tr>
+      <tr>
+        <td class="plan-name">ナレーション</td>
+        <td>ご本人/ご家族の語りを収録・編集</td>
+        <td class="price">+9,800円〜</td>
+      </tr>
+      <tr>
+        <td class="plan-name">オーダーBGM</td>
+        <td>思い出の曲・オリジナル楽曲制作</td>
+        <td class="price">+9,800円〜</td>
+      </tr>
+      <tr>
+        <td class="plan-name">高速納品</td>
+        <td>10営業日以内に納品</td>
+        <td class="price">+10,000円</td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="text-align:center; max-width:680px; margin:24px auto 0; font-size:0.9rem; color:#6a5240;">
+    ※ 想い出補完シーンは、動画内で「memory」マーク等を付けて実写と明確に区別します。<br />
+    ご本人・ご家族の事前確認を経た上で組み込みますので、安心してご利用いただけます。
+  </p>
+</section>
+
+<section class="target">
+  <h2>お客様の声（イメージ）</h2>
+  <div class="voice">
+    「父の米寿のお祝いに贈りました。古い白黒写真からはじまり、孫との写真で終わるムービーに、家族みんなが涙しました。」
+    <span class="name">— 60代 ご長男様</span>
+  </div>
+  <div class="voice">
+    「終活の一環として、自分で依頼しました。アルバムを整理するきっかけにもなり、子どもたちに渡せる『最後の宿題』が出来ました。」
+    <span class="name">— 78歳 ご本人様</span>
+  </div>
+</section>
+
+<section>
+  <h2>よくあるご質問</h2>
+  <div class="faq-list">
+    <details class="faq-item">
+      <summary>写真は何枚必要ですか？</summary>
+      <div class="answer">10 枚程度から制作可能です。AI が写真と写真の「つなぎ」を補間するため、一般的なスライドショーに必要な数百枚は不要です。</div>
+    </details>
+    <details class="faq-item">
+      <summary>古い紙焼き写真でも大丈夫ですか？</summary>
+      <div class="answer">はい。色あせ・キズも AI で補正してから動画化します。原本はお預かり後 30 日以内に責任を持ってご返送します。</div>
+    </details>
+    <details class="faq-item">
+      <summary>写真がない時期があるのですが…</summary>
+      <div class="answer">「想い出補完オプション」（+5,000 円/シーン）で、前後の写真を参考に AI が当時の姿を想像生成します。実写と区別する演出を必ず加え、事前にご家族のご確認をいただきます。</div>
+    </details>
+    <details class="faq-item">
+      <summary>制作期間はどのくらいですか？</summary>
+      <div class="answer">写真をすべてお受け取りしてから 4〜6 週間が目安です。「高速納品オプション」（+10,000 円）で 10 営業日以内も可能です。</div>
+    </details>
+  </div>
+  <p style="text-align:center; margin-top:24px;">
+    <a href="faq.html" class="cta-btn solid">もっと見る（FAQ ページへ）</a>
+  </p>
+</section>
+
+<section id="contact">
+  <h2>お問い合わせ</h2>
+  <p style="text-align:center;">まずは無料相談から。サンプル動画も無料でお送りします。</p>
+  <p style="text-align:center; margin-top:24px;">
+    <a href="contact.html" class="cta-btn solid">お問い合わせフォームへ</a>
+  </p>
+  <p style="text-align:center; margin-top:20px; font-size:0.95rem;">
+    📞 0120-XXX-XXX（平日 10:00-18:00）<br />
+    ✉ info@example.jp
+  </p>
+</section>
+
+<footer>
+  <p>人生タイムラプス｜写真でつづる自分史ムービー制作サービス</p>
+  <div class="legal-links">
+    <a href="faq.html">よくある質問</a>
+    <a href="contact.html">お問い合わせ</a>
+    <!-- 法務文書公開時にリンク有効化 -->
+    <!-- <a href="terms.html">利用規約</a>
+    <a href="privacy.html">プライバシーポリシー</a>
+    <a href="tokutei.html">特商法表記</a> -->
+  </div>
+  <p>&copy; 2026 Jinsei Timelapse Project</p>
+</footer>
+
 </body>
 </html>

@@ -39,12 +39,28 @@
 
 ### 2.1 Web サイト
 - [x] サービス紹介 LP の初版作成（`index.html`）
-- [ ] お問い合わせフォームの実装（メール送信 or フォームサービス連携）
-- [ ] サンプル動画埋め込み（YouTube 限定公開）
-- [ ] FAQ ページの追加
-- [ ] SEO 対策（メタ情報・構造化データ・サイトマップ）
-- [ ] スマホ表示の最終調整
-- [ ] アクセス解析（GA4 / Search Console）導入
+- [x] お問い合わせフォームの実装（`contact.html` ＋ `thanks.html`）
+  - Formspree 連携を想定したフォームを実装。本番公開時にフォーム ID 差し替えのみで稼働可
+  - スパム対策（ハニーポット）・必須項目バリデーション・プライバシー同意チェック付き
+- [x] サンプル動画埋め込み枠の追加（YouTube 限定公開を想定したプレースホルダ）
+- [x] FAQ ページの追加（`faq.html`）
+  - 4 カテゴリ・15 問の Q&A
+  - 構造化データ（FAQPage JSON-LD）でリッチリザルト対応
+- [x] SEO 対策
+  - 各ページの title / description / OG / Twitter Card
+  - JSON-LD 構造化データ（Service / FAQPage）
+  - `sitemap.xml` / `robots.txt`
+- [x] スマホ表示の最終調整（`@media (max-width: 600px)` で全要素を調整）
+- [x] アクセス解析（GA4 / Search Console）導入準備
+  - `index.html` に GA4 スニペットをコメントアウト状態で組み込み済み（測定 ID 差し替えで有効化）
+- [x] 共通スタイル抽出（`assets/style.css`）
+- [x] セットアップガイド作成（`docs/04-web-setup-guide.md`）
+- [ ] 公開作業（次フェーズ）
+  - [ ] ホスティングサービス選定（Netlify 推奨）
+  - [ ] 独自ドメイン取得
+  - [ ] プレースホルダ一括置換（ドメイン・電話・メール・GA4 ID・Formspree ID）
+  - [ ] SSL 設定
+  - [ ] 公開後の動作確認
 
 ### 2.2 写真受付システム
 - [ ] 専用アップローダー（大容量・SSL 対応）構築
