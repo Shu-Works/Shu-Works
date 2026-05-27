@@ -8,15 +8,15 @@
 ## 1. 事業企画・準備フェーズ
 
 ### 1.1 市場調査・コンセプト固め
-- [x] 競合サービス調査（自分史制作・遺影動画・葬儀社オプション）→ `docs/01-market-research.md`
+- [x] 競合サービス調査（自分史制作・遺影動画・葬儀社オプション）→ `docs/strategy/market-research.md`
 - [ ] ターゲット層へのヒアリング（終活セミナー参加者・介護施設利用家族）
-  - [x] ヒアリングシートのテンプレート作成 → `docs/02-hearing-sheet.md`
+  - [x] ヒアリングシートのテンプレート作成 → `docs/strategy/hearing-sheet-research.md`
   - [ ] モニター 10 名のリクルーティング
   - [ ] インタビュー実施
   - [ ] 集計・分析レポート作成
-- [x] 価格帯の妥当性検証（モニター調査）→ `docs/01-market-research.md` §3
+- [x] 価格帯の妥当性検証（モニター調査）→ `docs/strategy/market-research.md` §3
 - [ ] サービス名・ロゴ・ブランドカラーの確定
-  - [x] ネーミング・カラー・コピー案の提案 → `docs/03-brand-proposal.md`
+  - [x] ネーミング・カラー・コピー案の提案 → `docs/strategy/brand-proposal.md`
   - [ ] 社内承認
   - [ ] 商標調査（J-PlatPat）
   - [ ] ロゴデザイン発注
@@ -54,7 +54,7 @@
 - [x] アクセス解析（GA4 / Search Console）導入準備
   - `index.html` に GA4 スニペットをコメントアウト状態で組み込み済み（測定 ID 差し替えで有効化）
 - [x] 共通スタイル抽出（`assets/style.css`）
-- [x] セットアップガイド作成（`docs/04-web-setup-guide.md`）
+- [x] セットアップガイド作成（`docs/growth/web-setup-guide.md`）
 - [ ] 公開作業（次フェーズ）
   - [ ] ホスティングサービス選定（Netlify 推奨）
   - [ ] 独自ドメイン取得
@@ -63,15 +63,15 @@
   - [ ] 公開後の動作確認
 
 ### 2.2 写真受付システム
-- [x] システム全体設計（自前開発ゼロ／既存 SaaS の組み合わせ）→ `docs/05-photo-intake-system.md`
+- [x] システム全体設計（自前開発ゼロ／既存 SaaS の組み合わせ）→ `docs/customer/intake-system.md`
 - [x] 専用アップローダーの選定 → Google Drive 案件別共有フォルダで構築
-- [x] 郵送受付フロー（受領確認 → 返送ラベル発行）の整備 → `docs/07-postal-intake-guide.md`
+- [x] 郵送受付フロー（受領確認 → 返送ラベル発行）の整備 → `docs/customer/postal-guide.md`
   - お客様向け「写真送付ガイド」（PDF 化用テンプレ）
   - 社内向け「郵送受付・返送チェックリスト」
-- [x] 受付管理ダッシュボード設計（Notion 想定）→ `docs/08-case-management-template.md`
+- [x] 受付管理ダッシュボード設計（Notion 想定）→ `docs/operations/case-management.md`
   - 案件 ID 体系（JT-2026-0001）／プロパティ 23 項目／7 ビュー
   - ステータス遷移ルール＋ SLA
-- [x] お客様向けメールテンプレ集（受付〜納品〜アフターフォロー）→ `docs/06-mail-templates.md`
+- [x] お客様向けメールテンプレ集（受付〜納品〜アフターフォロー）→ `docs/customer/mail-templates.md`
 - [ ] 初期セットアップ（実作業）
   - [ ] 業務用 Google アカウント取得 ＋ Google One 200GB 契約
   - [ ] Google Drive フォルダ構造作成 ＋ テンプレートフォルダ準備
@@ -81,23 +81,23 @@
   - [ ] テスト案件 `JT-2026-0000` で一周リハーサル
 
 ### 2.3 動画制作パイプライン（コア技術）
-- [x] パイプライン全体設計・ツールスタック選定 → `docs/10-video-pipeline-overview.md`
+- [x] パイプライン全体設計・ツールスタック選定 → `docs/production/00-overview.md`
   - 月次コスト試算（直接費 約 3,200円/件、粗利率 92%）／月キャパシティ試算（月 5〜8 本）
-- [x] 写真自動補正（AI 高解像度化・色補正）ワークフロー → `docs/pipeline/01-photo-restoration.md`
+- [x] 写真自動補正（AI 高解像度化・色補正）ワークフロー → `docs/production/01-photo-restoration.md`
   - メイン：**Topaz Photo AI**（買切 約 3 万円）／補助：Adobe Photoshop
-- [x] **AI 中間フレーム補間（ブリッジング）の技術選定** → `docs/pipeline/02-ai-bridging.md`
+- [x] **AI 中間フレーム補間（ブリッジング）の技術選定** → `docs/production/02-ai-bridging.md`
   - メイン：**Kling AI**（Start+End Frame 機能）／サブ：Luma Dream Machine
   - プロンプトテンプレ（用途別）、失敗パターン 4 種への対処手順を完備
-- [x] **【想い出補完オプション】AI 画像生成パイプライン** → `docs/pipeline/03-memory-fill.md`
+- [x] **【想い出補完オプション】AI 画像生成パイプライン** → `docs/production/03-memory-fill.md`
   - メイン：**Midjourney + IP-Adapter**（顔特徴量保持）
   - ご家族確認フロー（候補提示 → 修正 → 承認 → 動画化 → 演出付与）
-- [x] **チャプター字幕テンプレート**（「○歳 ライフイベント」フォーマット）→ `pipeline/04-editing-and-delivery.md` §3
-- [x] 制作用ヒアリングシート（人生の節目を整理）→ `docs/pipeline/05-hearing-sheet-production.md`
-- [x] テンプレート動画素材（オープニング・エンディング・トランジション）→ `pipeline/04-editing-and-delivery.md` §5
-- [x] タイムラプス組み立て手順（DaVinci Resolve）→ `pipeline/04-editing-and-delivery.md` §6
-- [x] 編集者向け作業マニュアル → `pipeline/04-editing-and-delivery.md` 全体
-- [x] 品質チェックリスト（15 項目）→ `pipeline/04-editing-and-delivery.md` §7
-- [x] 納品物管理（DVD / Blu-ray / USB / クラウドリンク）→ `pipeline/04-editing-and-delivery.md` §9-10
+- [x] **チャプター字幕テンプレート**（「○歳 ライフイベント」フォーマット）→ `production/04-editing-and-delivery.md` §3
+- [x] 制作用ヒアリングシート（人生の節目を整理）→ `docs/customer/hearing-sheet-production.md`
+- [x] テンプレート動画素材（オープニング・エンディング・トランジション）→ `production/04-editing-and-delivery.md` §5
+- [x] タイムラプス組み立て手順（DaVinci Resolve）→ `production/04-editing-and-delivery.md` §6
+- [x] 編集者向け作業マニュアル → `production/04-editing-and-delivery.md` 全体
+- [x] 品質チェックリスト（15 項目）→ `production/04-editing-and-delivery.md` §7
+- [x] 納品物管理（DVD / Blu-ray / USB / クラウドリンク）→ `production/04-editing-and-delivery.md` §9-10
 - [ ] **パイロット制作 3 本の実施（公開前必須）**
   - [ ] 1 本目：ご自身 or ご家族（全工程通し確認）
   - [ ] 2 本目：高齢のご家族（古い写真の補正品質）
@@ -125,13 +125,13 @@
 - [ ] Google 広告 / Meta 広告のテスト出稿（CPA 検証）
 
 ### 3.2 オフライン・B2B 提携
-- [x] B2B 提携戦略の全体設計（5 提携モデル・優先順位・KPI）→ `docs/09-b2b-strategy.md`
-- [x] 葬儀社への営業資料作成 → `docs/b2b/01-funeral-companies.md`
-- [x] 写真館・カメラ店との取次契約交渉用 提案資料 → `docs/b2b/02-photo-studios.md`
-- [x] 介護施設・地域包括支援センター向けチラシ → `docs/b2b/03-care-facilities.md`
-- [x] 終活セミナー・エンディングノート講座とのコラボ提案 → `docs/b2b/04-seminars.md`
-- [x] 自治体の高齢者支援部署へのアプローチ用 企画書 → `docs/b2b/05-municipalities.md`
-- [x] 提携契約書 雛形 → `docs/b2b/99-partner-agreement-template.md`
+- [x] B2B 提携戦略の全体設計（5 提携モデル・優先順位・KPI）→ `docs/growth/b2b/00-strategy.md`
+- [x] 葬儀社への営業資料作成 → `docs/growth/b2b/01-funeral-companies.md`
+- [x] 写真館・カメラ店との取次契約交渉用 提案資料 → `docs/growth/b2b/02-photo-studios.md`
+- [x] 介護施設・地域包括支援センター向けチラシ → `docs/growth/b2b/03-care-facilities.md`
+- [x] 終活セミナー・エンディングノート講座とのコラボ提案 → `docs/growth/b2b/04-seminars.md`
+- [x] 自治体の高齢者支援部署へのアプローチ用 企画書 → `docs/growth/b2b/05-municipalities.md`
+- [x] 提携契約書 雛形 → `docs/growth/b2b/99-partner-agreement-template.md`
 - [ ] 提携契約書の弁護士レビュー（必須）
 - [ ] 営業実施（実作業）
   - [ ] 葬儀社 5 社へのアプローチ（Phase 1）
@@ -141,19 +141,19 @@
   - [ ] 地域包括支援センターへの情報提供
 
 ### 3.3 ギフト需要の開拓
-- [x] ギフト需要開拓 戦略（自己購入とギフト購入の違い／3 つの軸／ペルソナ）→ `docs/11-gift-strategy.md`
+- [x] ギフト需要開拓 戦略（自己購入とギフト購入の違い／3 つの軸／ペルソナ）→ `docs/growth/gift/00-strategy.md`
 - [x] 「還暦・古希・喜寿・米寿」専用ランディングページ → `gift.html`
   - 8 つの長寿祝い年齢を伝統色付きで一覧表示
   - 3 段階のギフトパッケージ（無料／+3,000 円／+5,000 円）
   - 父の日・母の日・敬老の日の季節バナー
-- [x] ギフト包装・メッセージカード対応 → `docs/gift/01-gift-packaging.md`
+- [x] ギフト包装・メッセージカード対応 → `docs/growth/gift/01-gift-packaging.md`
   - 桐箱・和紙メッセージカード（5 種類）・お祝い文例集
   - 包装の標準オペレーション手順／コスト試算
-- [x] 父の日・母の日・敬老の日キャンペーン設計 → `docs/gift/02-seasonal-campaigns.md`
+- [x] 父の日・母の日・敬老の日キャンペーン設計 → `docs/growth/gift/02-seasonal-campaigns.md`
   - 年間キャンペーンカレンダー
   - 月次受注見込み試算（**年間 72 件・年商 288 万円**）
   - 介護施設向け「集団上映会」パッケージ提案
-- [x] EC モール（楽天・Yahoo!）出店検討 → `docs/gift/03-ec-mall-analysis.md`
+- [x] EC モール（楽天・Yahoo!）出店検討 → `docs/growth/gift/03-ec-mall-analysis.md`
   - **結論：早期はココナラ＋ BASE＋自社サイト**で運用
   - 楽天・Yahoo! は事業成長後に再評価（Phase 2 / Phase 3）
 - [x] 既存ページのナビゲーションに「ギフトとして」を追加（index / faq / contact / thanks）

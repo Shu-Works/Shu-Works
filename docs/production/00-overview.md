@@ -24,7 +24,7 @@
 │   ・色あせ／キズ／黄ばみ補正         │
 │   ・解像度アップスケール             │
 │   ・顔のシャープ化                   │
-│   詳細：pipeline/01-photo-restoration│
+│   詳細：production/01-photo-restoration│
 └──────────┬─────────────────────────┘
            ↓
    ┌───────┴────────┐
@@ -81,7 +81,7 @@
 | **Luma Dream Machine**（補助） | クラウド SaaS | 月 約 1,500〜5,000 円 | Kling で品質が出ない場合の代替／キーフレーム指定可 |
 | Runway Gen-3 / Gen-4（補助） | クラウド SaaS | 月 約 1,800〜13,500 円 | 動きの自然さで優位な場合あり |
 
-**詳細比較**：`pipeline/02-ai-bridging.md` 参照
+**詳細比較**：`production/02-ai-bridging.md` 参照
 
 ### 想い出補完（AI 画像生成）
 | ツール | 種別 | コスト | 用途 |
@@ -147,11 +147,11 @@
 
 | ドキュメント | 内容 |
 | --- | --- |
-| `pipeline/01-photo-restoration.md` | 写真補正ワークフロー（Topaz Photo AI + Photoshop の手順） |
-| `pipeline/02-ai-bridging.md` | AI 中間補間の詳細（Kling AI 中心、品質出ない時の対処） |
-| `pipeline/03-memory-fill.md` | 想い出補完オプションの制作フロー（Midjourney + 同一人物性） |
-| `pipeline/04-editing-and-delivery.md` | 編集・字幕・BGM・QA チェックリスト・納品仕様 |
-| `pipeline/05-hearing-sheet-production.md` | 制作時にお客様から情報を引き出すヒアリングシート |
+| `production/01-photo-restoration.md` | 写真補正ワークフロー（Topaz Photo AI + Photoshop の手順） |
+| `production/02-ai-bridging.md` | AI 中間補間の詳細（Kling AI 中心、品質出ない時の対処） |
+| `production/03-memory-fill.md` | 想い出補完オプションの制作フロー（Midjourney + 同一人物性） |
+| `production/04-editing-and-delivery.md` | 編集・字幕・BGM・QA チェックリスト・納品仕様 |
+| `customer/hearing-sheet-production.md` | 制作時にお客様から情報を引き出すヒアリングシート |
 
 ---
 
@@ -216,5 +216,5 @@
 
 - `docs/legal/06-ai-supplement-guideline.md`：AI 補完シーンの倫理ガイドライン
 - `docs/legal/05-ai-supplement-consent.md`：AI 補完同意書
-- `docs/05-photo-intake-system.md`：写真受領フロー
-- `docs/08-case-management-template.md`：案件管理ボード（制作工程ステータス）
+- `docs/customer/intake-system.md`：写真受領フロー
+- `docs/operations/case-management.md`：案件管理ボード（制作工程ステータス）

@@ -79,7 +79,7 @@
 
 ## 4. ヒアリング項目（補完シーン制作前）
 
-> 詳細なヒアリングシートは `pipeline/05-hearing-sheet-production.md` の補完オプション欄を参照
+> 詳細なヒアリングシートは `customer/hearing-sheet-production.md` の補完オプション欄を参照
 
 ### 必須質問
 - 補完したい時期：何歳頃ですか？西暦 / 年号で
@@ -317,6 +317,6 @@ minimal facial expression change, photorealistic, dignified portrait.
 
 - 倫理ガイドライン：`docs/legal/06-ai-supplement-guideline.md`
 - AI 補完同意書：`docs/legal/05-ai-supplement-consent.md`
-- AI 中間補間：`pipeline/02-ai-bridging.md`
-- 編集・字幕：`pipeline/04-editing-and-delivery.md`
-- ヒアリングシート：`pipeline/05-hearing-sheet-production.md`
+- AI 中間補間：`production/02-ai-bridging.md`
+- 編集・字幕：`production/04-editing-and-delivery.md`
+- ヒアリングシート：`customer/hearing-sheet-production.md`

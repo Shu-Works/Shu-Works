@@ -282,5 +282,5 @@ AI 動画生成領域は **3 ヶ月ごとに新ツールが登場**するため�
 ## 9. 関連ドキュメント
 
 - 倫理ガイドライン（生成 OK/NG）：`docs/legal/06-ai-supplement-guideline.md`
-- 想い出補完オプション（新規生成）：`pipeline/03-memory-fill.md`
-- 編集・字幕：`pipeline/04-editing-and-delivery.md`
+- 想い出補完オプション（新規生成）：`production/03-memory-fill.md`
+- 編集・字幕：`production/04-editing-and-delivery.md`

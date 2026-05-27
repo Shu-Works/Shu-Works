@@ -209,6 +209,6 @@
 ## 9. ドキュメント体系
 
 - `gift.html`：ギフト需要専用 LP
-- `docs/gift/01-gift-packaging.md`：包装・メッセージカードの詳細仕様
-- `docs/gift/02-seasonal-campaigns.md`：父の日・母の日・敬老の日キャンペーン設計
-- `docs/gift/03-ec-mall-analysis.md`：EC モール出店検討
+- `docs/growth/gift/01-gift-packaging.md`：包装・メッセージカードの詳細仕様
+- `docs/growth/gift/02-seasonal-campaigns.md`：父の日・母の日・敬老の日キャンペーン設計
+- `docs/growth/gift/03-ec-mall-analysis.md`：EC モール出店検討

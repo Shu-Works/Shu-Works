@@ -282,7 +282,7 @@ Audio: LPCM 48kHz
 
 ### 8.1 初稿提出
 
-メールテンプレ 6 番（`docs/06-mail-templates.md`）に従って送付：
+メールテンプレ 6 番（`docs/customer/mail-templates.md`）に従って送付：
 
 ```
 ■ 視聴 URL：（限定公開）
@@ -378,7 +378,7 @@ Audio: LPCM 48kHz
 
 ## 12. 関連ドキュメント
 
-- AI 中間補間：`pipeline/02-ai-bridging.md`
-- 想い出補完：`pipeline/03-memory-fill.md`
-- メールテンプレ：`docs/06-mail-templates.md`
-- 案件管理ボード：`docs/08-case-management-template.md`
+- AI 中間補間：`production/02-ai-bridging.md`
+- 想い出補完：`production/03-memory-fill.md`
+- メールテンプレ：`docs/customer/mail-templates.md`
+- 案件管理ボード：`docs/operations/case-management.md`
