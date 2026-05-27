@@ -75,10 +75,14 @@
 | Block | 4 | Shrine, CYBER ZEN, Japan Travel Stamp, CHUNTA'S SKY JOURNEY |
 | 差戻し | 1 | Kawaii Cat |
 
-**リスク評価（01-elon-ai）：**
-- ブロック比率 4/10 = 40%。これはAmazonからの構造的警告と見るべき。
-- 放置すれば販売中5冊のサスペンドリスクあり。
-- **原因情報は CEO からメール共有待ち（2026-05-27 同日中）。**
+**真因（2026-05-27 確定）：**
+ChatGPTによるタイトル生成が既存ベストセラー（Jade Summer系「Bold & Easy Coloring Book for Adults」）と酷似 + 同時期の大量投入で類似性検出にヒット。AI使用申告・アカウント履歴は原因ではない。詳細は `employees/01-elon-ai/decisions/2026-05-27_kdp-block-analysis.md`。
+
+**現方針（CEO承認済 S1-S3）：**
+- 2026年8月末まで KDP 新規出品を **完全凍結**
+- 販売中5冊のメタデータ変更は **全面禁止**
+- ブロック4冊は Payhip専売 に切替、復活努力は停止
+- Etsy立ち上げを優先（KDP依存リスクの分散）
 
 ---
 
