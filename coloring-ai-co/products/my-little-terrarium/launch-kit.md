@@ -420,10 +420,14 @@ Slow down. Color. Breathe.
 
 ## 出品後の商品URL（CEOが追記）
 
-- 単品 My Little Terrarium：
+- 単品 My Little Terrarium：**https://payhip.com/b/IESVl** ✅
 - 2冊バンドルA（+ Alone, But Safe）：
 - 2冊バンドルB（+ Magical Miniature Worlds）：
 - 3冊フルコレクション：
+
+### 追加出品（私の指示外でCEO実施）
+- Chunta's Sky Journey Through Japan（KDPブロック商品のPayhip移行）：**https://payhip.com/b/eHXhN** ✅
+  - ⚠️ タイトルがKDPブロック時のまま。手の空いた時に独自サブタイトルへ変更推奨
 
 ---
 
