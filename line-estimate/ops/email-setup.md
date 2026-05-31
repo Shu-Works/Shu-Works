@@ -11,7 +11,7 @@
 
 | メアド | 用途 | 転送先 |
 | --- | --- | --- |
-| `info@sakusaku-kun.com` | 顧客対応・営業窓口 | CEO の Gmail |
+| `info@shu-works.co.jp` | 顧客対応・営業窓口 | CEO の Gmail |
 | `support@sakusaku-kun.com` | 技術サポート（モニター後） | CEO の Gmail |
 | `noreply@sakusaku-kun.com` | システム自動配信 | 受信専用（無し） |
 | `mizuno@shu-works.co.jp` | CEO 個人用 | CEO の Gmail |
@@ -60,7 +60,7 @@ DNSが Cloudflare 管理になったら：
 
 ## 3. 転送ルール設定
 
-### `info@sakusaku-kun.com` を CEO の Gmail へ転送
+### `info@shu-works.co.jp` を CEO の Gmail へ転送
 
 1. Email Routing → 「Routing rules」タブ
 2. 「Create address」をクリック
@@ -89,10 +89,10 @@ CEO の Gmail に Cloudflare から確認メールが届く → 「Verify」を�
 
 ---
 
-## 4. Gmail から「info@sakusaku-kun.com 送信元」で送る設定
+## 4. Gmail から「info@shu-works.co.jp 送信元」で送る設定
 
 転送だけでは、返信時に「○○@gmail.com」から返信してしまう。
-ちゃんと「info@sakusaku-kun.com」から返信できるよう設定する。
+ちゃんと「info@shu-works.co.jp」から返信できるよう設定する。
 
 ### 必要な SMTP プロバイダ（無料）
 
@@ -124,10 +124,10 @@ Cloudflare Email Routing は **送信機能がない**。送信は別のSMTPサ�
    - パスワード：Brevo から取得した API キー
    - TLS を使用
 5. 「アカウントを追加」
-6. 認証メールが「info@sakusaku-kun.com」に届く → 自分の Gmail に転送されてくる → 認証コードを入力
+6. 認証メールが「info@shu-works.co.jp」に届く → 自分の Gmail に転送されてくる → 認証コードを入力
 7. 完了
 
-→ これで Gmail から「info@sakusaku-kun.com」発信元でメールを送れるようになる。
+→ これで Gmail から「info@shu-works.co.jp」発信元でメールを送れるようになる。
 
 ---
 
@@ -150,7 +150,7 @@ Brevo が指定する CNAME を Cloudflare DNS に追加（Brevo 管理画面で
 ```
 Name: _dmarc
 Type: TXT
-Content: v=DMARC1; p=quarantine; rua=mailto:info@sakusaku-kun.com
+Content: v=DMARC1; p=quarantine; rua=mailto:info@shu-works.co.jp
 ```
 
 → これで Gmail / Outlook で正常に受信される率が **95%以上**になる。
@@ -170,7 +170,7 @@ Shu Works（2026年7月中に株式会社化予定）
 　https://sakusaku-kun.com
 　https://shu-works.co.jp
 
-📧 info@sakusaku-kun.com
+📧 info@shu-works.co.jp
 📱 [電話番号]
 ━━━━━━━━━━━━━━━━━━━
 ```
@@ -183,7 +183,7 @@ CEOがやること：
 - [ ] sakusaku-kun.com を Cloudflare に移管
 - [ ] shu-works.co.jp を Cloudflare に移管
 - [ ] Cloudflare Email Routing を両ドメインで有効化
-- [ ] `info@sakusaku-kun.com` を CEO の Gmail に転送設定
+- [ ] `info@shu-works.co.jp` を CEO の Gmail に転送設定
 - [ ] `mizuno@shu-works.co.jp` を CEO の Gmail に転送設定
 - [ ] Brevo にサインアップ・SMTP キー取得
 - [ ] Gmail に SMTP 設定（送信元を info@... に）
@@ -196,12 +196,12 @@ CEOがやること：
 ## 8. テスト方法
 
 ### 受信テスト
-別の Gmail から `info@sakusaku-kun.com` に送信。
+別の Gmail から `info@shu-works.co.jp` に送信。
 → CEO の Gmail で受信できれば成功。
 
 ### 送信テスト
-Gmail で「info@sakusaku-kun.com 送信元」を選んで、自分の別アドレスに送信。
-→ 相手側で「info@sakusaku-kun.com から届いた」と表示されれば成功。
+Gmail で「info@shu-works.co.jp 送信元」を選んで、自分の別アドレスに送信。
+→ 相手側で「info@shu-works.co.jp から届いた」と表示されれば成功。
 
 ### スパム判定テスト
 https://www.mail-tester.com にアクセス → 表示されたアドレスにテスト送信

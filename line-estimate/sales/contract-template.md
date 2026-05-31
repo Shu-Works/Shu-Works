@@ -141,7 +141,7 @@
 1. 稼働率目標：99.0%以上（月間）
 2. 計画停止：原則月1回まで、土日深夜帯に限定し
 　 事前に72時間前までに通知します
-3. 障害発生時の連絡先：support@sakusoku-kun.com
+3. 障害発生時の連絡先：info@shu-works.co.jp
 　 営業時間内（平日9〜18時）2時間以内に一次対応します
 
 
@@ -198,7 +198,7 @@
 　　 代表者：水野 秀彦
 　　 サイト：https://sakusaku-kun.com
 　　 コーポレート：https://shu-works.co.jp
-　　 連絡先：info@sakusaku-kun.com
+　　 連絡先：info@shu-works.co.jp
 
 【乙】[正式社名]
 　　 代表者：[氏名]

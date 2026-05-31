@@ -131,7 +131,7 @@ AIが自動で日報を作成・案件別に整理
 
 48時間以内に、Zoom URL をお送りします。
 
-ご連絡先：info@sakusaku-kun.com
+ご連絡先：info@shu-works.co.jp
 
 代表 水野 秀彦
 Shu Works（2026年7月中に株式会社化予定）
@@ -159,7 +159,7 @@ https://sakusaku-kun.com（プロダクト）
 https://shu-works.co.jp（コーポレート）
 
 ▼ 連絡先
-info@sakusaku-kun.com
+info@shu-works.co.jp
 ```
 
 ### デフォルト応答（キーワード外の質問）
@@ -169,7 +169,7 @@ info@sakusaku-kun.com
 
 担当者が24時間以内にお返事します🙏
 
-お急ぎの場合は info@sakusaku-kun.com まで。
+お急ぎの場合は info@shu-works.co.jp まで。
 
 ▼ よくあるご質問はこちらで自動応答できます
 「料金」「使い方」「相談」とお送りください
