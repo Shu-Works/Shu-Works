@@ -6,257 +6,412 @@
 <style>
   @page {
     size: A4;
-    margin: 15mm 18mm;
+    margin: 16mm 18mm;
   }
   * { box-sizing: border-box; }
   body {
     font-family: "Yu Gothic", "Hiragino Sans", "Noto Sans CJK JP", sans-serif;
     font-size: 10.5pt;
-    line-height: 1.55;
-    color: #111;
+    line-height: 1.7;
+    color: #1a1a1a;
     margin: 0;
     padding: 0;
   }
-  .header {
+
+  /* === ヘッダー === */
+  .doc-header {
     border-bottom: 3px solid #1a3a6e;
-    padding-bottom: 6pt;
-    margin-bottom: 10pt;
+    padding-bottom: 8pt;
+    margin-bottom: 14pt;
   }
-  .header h1 {
+  .doc-header h1 {
     font-size: 18pt;
-    margin: 0 0 2pt 0;
+    margin: 0 0 4pt 0;
     color: #1a3a6e;
+    letter-spacing: 0.5pt;
   }
-  .header .meta {
+  .doc-header .meta {
     font-size: 9pt;
     color: #555;
+    line-height: 1.5;
   }
-  .row {
-    display: flex;
-    gap: 10pt;
-    margin-bottom: 8pt;
-  }
-  .col {
-    flex: 1;
-  }
+
+  /* === セクション === */
   h2 {
-    font-size: 11pt;
+    font-size: 12pt;
     color: #1a3a6e;
     border-left: 4px solid #1a3a6e;
-    padding-left: 6pt;
-    margin: 8pt 0 4pt 0;
+    padding-left: 8pt;
+    margin: 14pt 0 6pt 0;
+    page-break-after: avoid;
   }
+  section {
+    page-break-inside: avoid;
+    margin-bottom: 4pt;
+  }
+
+  /* === 基本情報テーブル === */
   table.basic {
     width: 100%;
     border-collapse: collapse;
-    font-size: 9.5pt;
+    font-size: 10pt;
   }
   table.basic th {
     background: #f2f4f8;
     text-align: left;
-    padding: 3pt 6pt;
+    padding: 6pt 8pt;
     border: 1px solid #c8cdd6;
-    width: 28%;
+    width: 26%;
     font-weight: 600;
+    vertical-align: top;
   }
   table.basic td {
-    padding: 3pt 6pt;
+    padding: 6pt 8pt;
     border: 1px solid #c8cdd6;
+    vertical-align: top;
+    line-height: 1.6;
   }
+
+  /* === ミッション === */
   .mission {
     background: #f8f6ef;
     border-left: 4px solid #c9a236;
-    padding: 5pt 8pt;
-    font-size: 10pt;
-    margin: 5pt 0;
+    padding: 8pt 12pt;
+    font-size: 10.5pt;
+    line-height: 1.75;
+    margin: 6pt 0;
   }
+
+  /* === プロダクト 3段階 === */
   .plans {
     display: flex;
-    gap: 6pt;
-    margin-top: 4pt;
+    gap: 8pt;
+    margin-top: 6pt;
   }
   .plan-box {
     flex: 1;
     border: 1px solid #c8cdd6;
-    padding: 4pt 6pt;
-    font-size: 9pt;
+    padding: 7pt 9pt;
+    font-size: 9.5pt;
     background: #fafbfc;
+    border-radius: 3pt;
+    line-height: 1.6;
+  }
+  .plan-box.now {
+    background: #eff6f0;
+    border-color: #06c755;
+  }
+  .plan-box.future {
+    background: #fdf8eb;
+    border-color: #e8b95a;
   }
   .plan-box .num {
     color: #1a3a6e;
     font-weight: 700;
-    font-size: 9.5pt;
+    font-size: 10pt;
+    display: block;
+    margin-bottom: 2pt;
   }
+  .plan-box.now .num { color: #06c755; }
+  .plan-box.future .num { color: #c9a236; }
   .plan-box .when {
-    color: #888;
+    color: #777;
     font-size: 8.5pt;
+    display: block;
+    margin-bottom: 4pt;
   }
+
+  /* === 2カラム === */
+  .two-col {
+    display: flex;
+    gap: 14pt;
+    margin-top: 4pt;
+  }
+  .two-col .col {
+    flex: 1;
+  }
+
+  /* === リスト === */
   ul {
-    margin: 3pt 0 6pt 18pt;
+    margin: 4pt 0 6pt 18pt;
     padding: 0;
-    font-size: 9.5pt;
+    font-size: 10pt;
+    line-height: 1.7;
   }
-  ul li { margin-bottom: 1.5pt; }
+  ul li {
+    margin-bottom: 3pt;
+  }
+
+  /* === KPI 進捗カード === */
   .kpi {
     display: flex;
     gap: 6pt;
     font-size: 9pt;
+    margin-top: 4pt;
   }
   .kpi .item {
     flex: 1;
     background: #eef3fb;
-    padding: 4pt 6pt;
+    padding: 6pt 4pt;
     border-radius: 3pt;
+    text-align: center;
   }
   .kpi .label {
     color: #555;
     font-size: 8pt;
     display: block;
+    margin-bottom: 2pt;
   }
   .kpi .value {
     color: #1a3a6e;
     font-weight: 700;
     font-size: 11pt;
+    display: block;
   }
+
+  /* === ロードマップ === */
+  .roadmap {
+    border-left: 2px solid #1a3a6e;
+    padding-left: 12pt;
+    margin: 6pt 0;
+  }
+  .roadmap .item {
+    margin-bottom: 5pt;
+    font-size: 10pt;
+    line-height: 1.6;
+  }
+  .roadmap .when {
+    color: #1a3a6e;
+    font-weight: 700;
+    display: inline-block;
+    min-width: 95pt;
+  }
+
+  /* === 相談事項ボックス === */
   .ask {
     background: #fff5e6;
     border: 1px solid #e8b95a;
-    padding: 5pt 8pt;
-    font-size: 9.5pt;
-    margin-top: 5pt;
+    padding: 8pt 12pt;
+    font-size: 10pt;
+    margin-top: 6pt;
+    border-radius: 3pt;
   }
-  .ask strong { color: #b85c00; }
-  .footer {
-    margin-top: 8pt;
-    padding-top: 5pt;
+  .ask .lead {
+    color: #b85c00;
+    font-weight: 700;
+    margin-bottom: 4pt;
+    font-size: 10.5pt;
+  }
+  .ask ol {
+    margin: 4pt 0 0 18pt;
+    padding: 0;
+    font-size: 10pt;
+    line-height: 1.7;
+  }
+  .ask ol li {
+    margin-bottom: 4pt;
+  }
+
+  /* === フッター === */
+  .doc-footer {
+    margin-top: 10pt;
+    padding-top: 6pt;
     border-top: 1px solid #c8cdd6;
     font-size: 8.5pt;
     color: #555;
     text-align: center;
+    line-height: 1.5;
+  }
+
+  /* === 改ページ === */
+  .page-break {
+    page-break-after: always;
   }
 </style>
 </head>
 <body>
 
-<div class="header">
+<!-- ============ ページ1 ============ -->
+
+<div class="doc-header">
   <h1>事業計画概要 — Shu Works</h1>
-  <div class="meta">提出先：商工会議所 ／ 提出日：2026年6月1日 ／ 代表：水野 秀彦</div>
-</div>
-
-<table class="basic">
-  <tr>
-    <th>屋号</th>
-    <td>Shu Works（シューワークス）／ 2026年7月中に「Shu Works株式会社」設立予定</td>
-  </tr>
-  <tr>
-    <th>代表者</th>
-    <td>水野 秀彦（みずの ひでひこ）</td>
-  </tr>
-  <tr>
-    <th>所在地・連絡先</th>
-    <td>東京都内 ／ info@shu-works.co.jp</td>
-  </tr>
-  <tr>
-    <th>事業内容</th>
-    <td>業種特化AIサービス「サク索くん」シリーズの企画・開発・運営</td>
-  </tr>
-  <tr>
-    <th>関連サイト</th>
-    <td>https://shu-works.co.jp（コーポレート） ／ https://sakusaku-kun.com（プロダクト）</td>
-  </tr>
-</table>
-
-<h2>事業ミッション</h2>
-<div class="mission">
-  日本の小規模事業者が抱える「情報の渋滞」を、業種特化AIで解きほぐす。<br/>
-  新しいアプリを入れず、誰もが使うLINEを入口にして、現場の社長の時間を本業に戻す。
-</div>
-
-<h2>プロダクト構成（3段階リリース）</h2>
-<div class="plans">
-  <div class="plan-box">
-    <div class="num">① 工務店プラン</div>
-    <div class="when">2026年6月 提供開始</div>
-    従業員10名以下の小規模工務店向け。見積検索・写真日報・音声議事録・社内FAQをLINEで提供。
-  </div>
-  <div class="plan-box">
-    <div class="num">② 事務サポート版</div>
-    <div class="when">2026年後半 開始予定</div>
-    中小企業の経理・人事・総務部門向け。社内文書検索・経費精算・議事録自動化をLINEで。
-  </div>
-  <div class="plan-box">
-    <div class="num">③ 接骨院プラン</div>
-    <div class="when">2027年 開始予定</div>
-    小規模接骨院向け。患者カルテ検索・予約管理・施術記録・保険請求補助をLINEで。
+  <div class="meta">
+    提出先：商工会議所 ／ 提出日：2026年6月1日<br/>
+    屋号：Shu Works（2026年7月中に「Shu Works株式会社」設立予定）／ 代表：水野 秀彦
   </div>
 </div>
 
-<div class="row">
-  <div class="col">
-    <h2>ターゲット市場</h2>
-    <ul>
-      <li>第1弾：建設業許可業者 約47万社、うち10名以下 約27万社</li>
-      <li>第2弾：日本の中小企業 約358万社（事務効率化TAM 約1兆円）</li>
-      <li>第3弾：接骨院 約5万件＋整体・鍼灸を含め約15万件</li>
-    </ul>
-  </div>
-  <div class="col">
-    <h2>収益モデル</h2>
-    <ul>
-      <li>サブスクリプション型 SaaS（月額課金）</li>
-      <li>初期費用＋月額利用料の二本立て</li>
-      <li>契約期間12ヶ月・自動更新</li>
-      <li>業種特化により解約率を低く抑え、LTV最大化</li>
-    </ul>
-  </div>
-</div>
+<section>
+  <h2>1. 基本情報</h2>
+  <table class="basic">
+    <tr>
+      <th>屋号</th>
+      <td>Shu Works（シューワークス）</td>
+    </tr>
+    <tr>
+      <th>代表者</th>
+      <td>水野 秀彦（みずの ひでひこ）</td>
+    </tr>
+    <tr>
+      <th>所在地・連絡先</th>
+      <td>東京都内 ／ info@shu-works.co.jp</td>
+    </tr>
+    <tr>
+      <th>事業内容</th>
+      <td>業種特化AIサービス「サク索くん」シリーズの企画・開発・運営</td>
+    </tr>
+    <tr>
+      <th>関連サイト</th>
+      <td>
+        https://shu-works.co.jp（コーポレートサイト）<br/>
+        https://sakusaku-kun.com（プロダクトサイト）
+      </td>
+    </tr>
+  </table>
+</section>
 
-<h2>現在の進捗（2026年6月時点）</h2>
-<div class="kpi">
-  <div class="item">
-    <span class="label">公式LP</span>
-    <span class="value">公開済</span>
+<section>
+  <h2>2. 事業ミッション</h2>
+  <div class="mission">
+    日本の小規模事業者が抱える「情報の渋滞」を、業種特化AIで解きほぐす。<br/>
+    新しいアプリを入れず、誰もが使うLINEを入口にして、<br/>
+    現場の社長の時間を本業に戻す。
   </div>
-  <div class="item">
-    <span class="label">営業資料</span>
-    <span class="value">完成済</span>
-  </div>
-  <div class="item">
-    <span class="label">DMリスト</span>
-    <span class="value">100社</span>
-  </div>
-  <div class="item">
-    <span class="label">パートナー募集</span>
-    <span class="value">先着5社</span>
-  </div>
-  <div class="item">
-    <span class="label">法人化目標</span>
-    <span class="value">7月中</span>
-  </div>
-</div>
+</section>
 
-<h2>今後のロードマップ</h2>
-<ul>
-  <li><strong>2026年6月：</strong>開発パートナー5社獲得・モニター運用開始</li>
-  <li><strong>2026年7月：</strong>Shu Works株式会社 設立／特定創業支援等事業 証明書取得を希望</li>
-  <li><strong>2026年12月：</strong>累計10社・第2弾「事務サポート版」リリース</li>
-  <li><strong>2027年12月：</strong>累計100社・MRR 200万円</li>
-  <li><strong>2029年：</strong>累計1,000社・MRR 2,000万円</li>
-</ul>
+<section>
+  <h2>3. プロダクト構成（3段階リリース）</h2>
+  <div class="plans">
+    <div class="plan-box now">
+      <span class="num">① 工務店プラン</span>
+      <span class="when">2026年6月 提供開始</span>
+      従業員10名以下の小規模工務店向け。<br/>
+      見積検索・写真日報・音声議事録・社内FAQの4機能を LINE で提供。
+    </div>
+    <div class="plan-box future">
+      <span class="num">② 事務サポート版</span>
+      <span class="when">2026年後半 リリース予定</span>
+      中小企業の経理・人事・総務部門向け。<br/>
+      社内文書検索・経費精算・議事録自動化を LINE で。
+    </div>
+    <div class="plan-box future">
+      <span class="num">③ 接骨院プラン</span>
+      <span class="when">2027年 リリース予定</span>
+      小規模接骨院向け。<br/>
+      患者カルテ検索・予約管理・施術記録・保険請求補助を LINE で。
+    </div>
+  </div>
+</section>
 
-<h2>商工会議所へのご相談事項</h2>
-<div class="ask">
-  <strong>主な相談ニーズ：</strong>
-  <ol style="margin:3pt 0 0 18pt; padding:0; font-size:9.5pt;">
-    <li>特定創業支援等事業の証明書取得（7月の法人化に間に合わせたい）</li>
-    <li>4分野（経営・財務・人材育成・販路開拓）の支援スケジュール確定</li>
-    <li>創業関連保証・日本政策金融公庫融資の活用検討</li>
-    <li>専門家紹介（税理士・弁理士・社労士）</li>
-  </ol>
-</div>
+<section>
+  <h2>4. ターゲット市場・収益モデル</h2>
+  <div class="two-col">
+    <div class="col">
+      <strong style="color:#1a3a6e;">▼ ターゲット市場</strong>
+      <ul>
+        <li>第1弾：建設業許可業者 約47万社<br/>うち10名以下 約27万社</li>
+        <li>第2弾：日本の中小企業 約358万社<br/>事務効率化 TAM 約1兆円</li>
+        <li>第3弾：接骨院 約5万件<br/>整体・鍼灸を含め約15万件</li>
+      </ul>
+    </div>
+    <div class="col">
+      <strong style="color:#1a3a6e;">▼ 収益モデル</strong>
+      <ul>
+        <li>サブスクリプション型 SaaS（月額課金）</li>
+        <li>初期費用＋月額利用料の二本立て</li>
+        <li>契約期間 12ヶ月・自動更新</li>
+        <li>業種特化により解約率を低く抑え、<br/>顧客生涯価値（LTV）を最大化</li>
+      </ul>
+    </div>
+  </div>
+</section>
 
-<div class="footer">
-  Shu Works ／ 代表 水野 秀彦 ／ info@shu-works.co.jp ／ https://shu-works.co.jp
+<div class="page-break"></div>
+
+<!-- ============ ページ2 ============ -->
+
+<section>
+  <h2>5. 現在の進捗（2026年6月時点）</h2>
+  <div class="kpi">
+    <div class="item">
+      <span class="label">公式LP</span>
+      <span class="value">公開済</span>
+    </div>
+    <div class="item">
+      <span class="label">営業資料</span>
+      <span class="value">完成済</span>
+    </div>
+    <div class="item">
+      <span class="label">DMリスト</span>
+      <span class="value">100社</span>
+    </div>
+    <div class="item">
+      <span class="label">パートナー募集</span>
+      <span class="value">先着5社</span>
+    </div>
+    <div class="item">
+      <span class="label">法人化目標</span>
+      <span class="value">7月中</span>
+    </div>
+  </div>
+  <ul style="margin-top:8pt;">
+    <li>サク索くん公式 LINE アカウント開設済・LP（2サイト）公開済</li>
+    <li>申込書（請書方式）・利用規約・契約書テンプレ・営業スライド 完成</li>
+    <li>関東圏の小規模工務店100社のアプローチリスト構築済</li>
+    <li>開発パートナー先着5社を6月30日まで募集中（特別価格 永続据え置き）</li>
+  </ul>
+</section>
+
+<section>
+  <h2>6. 今後のロードマップ</h2>
+  <div class="roadmap">
+    <div class="item">
+      <span class="when">2026年6月：</span>開発パートナー5社獲得・モニター運用開始
+    </div>
+    <div class="item">
+      <span class="when">2026年7月：</span>Shu Works株式会社 設立 ／
+      <strong style="color:#b85c00;">特定創業支援等事業 証明書 取得希望</strong>
+    </div>
+    <div class="item">
+      <span class="when">2026年後半：</span>第2弾「事務サポート版」リリース・累計10社
+    </div>
+    <div class="item">
+      <span class="when">2027年12月：</span>累計100社・MRR 200万円
+    </div>
+    <div class="item">
+      <span class="when">2028〜2029年：</span>第3弾「接骨院プラン」展開・累計1,000社
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>7. 商工会議所へのご相談事項</h2>
+  <div class="ask">
+    <div class="lead">本日 ご相談したい内容</div>
+    <ol>
+      <li>
+        <strong>特定創業支援等事業の証明書取得</strong><br/>
+        7月中の法人化に間に合わせるための最短スケジュールを確認したい
+      </li>
+      <li>
+        <strong>4分野の支援メニュー確定</strong><br/>
+        経営・財務・人材育成・販路開拓の各分野で受講できる講座の整理
+      </li>
+      <li>
+        <strong>創業関連保証・日本政策金融公庫融資の活用検討</strong><br/>
+        プロダクト開発のための運転資金確保に向けた制度の説明
+      </li>
+      <li>
+        <strong>専門家紹介制度の確認</strong><br/>
+        税理士（法人決算）・弁理士（商標登録）・社労士（雇用関連）
+      </li>
+    </ol>
+  </div>
+</section>
+
+<div class="doc-footer">
+  Shu Works ／ 代表 水野 秀彦 ／ info@shu-works.co.jp<br/>
+  https://shu-works.co.jp ／ https://sakusaku-kun.com
 </div>
 
 </body>
