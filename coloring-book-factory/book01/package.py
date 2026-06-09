@@ -43,19 +43,22 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.utils import simpleSplit
 
 # ---------------------------------------------------------------------------
-# Book configuration  (edit per volume — this is the only block you change)
+# Book configuration  (shared with make_listing_assets.py via book_config.py)
 # ---------------------------------------------------------------------------
 
-BOOK = {
-    "title": "The Enchanted Witch's Cottage",
-    "subtitle": "A Cozy Coloring Journey",
-    "series": "The Cozy Witch's Cottage Series",
-    "volume": "Volume 1",
-    "shop": "(Your Shop Name)",
-    "cover_source_page": 48,          # which coloring page styles the cover
-    "next_volume": "The Witch's Library",
-    "etsy_or_payhip": "our shop",     # used in the thank-you / cross-sell page
-}
+try:
+    from book_config import BOOK
+except ImportError:                                  # standalone fallback
+    BOOK = {
+        "title": "The Enchanted Witch's Cottage",
+        "subtitle": "A Cozy Coloring Journey",
+        "series": "The Cozy Witch's Cottage Series",
+        "volume": "Volume 1",
+        "shop": "(Your Shop Name)",
+        "cover_source_page": 48,
+        "next_volume": "The Witch's Library",
+        "etsy_or_payhip": "our shop",
+    }
 
 # ---------------------------------------------------------------------------
 # Layout constants

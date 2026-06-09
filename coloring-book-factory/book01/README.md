@@ -1,14 +1,18 @@
-# Book #1 — Production Tools (Generate → Package)
+# Book #1 — Production Tools (Generate → Package → List)
 
-Two scripts take *The Enchanted Witch's Cottage* from prompts to a sellable PDF:
+Three scripts take *The Enchanted Witch's Cottage* from prompts to a sellable
+product **and** its full set of shop graphics:
 
 1. **`generate.py`** — produces the 50 coloring-page PNGs via the OpenAI Images
    API (DALL·E 3) from `../07_Generation_Prompts.csv`.
 2. **`package.py`** — assembles the approved PNGs into a print-ready, US-Letter,
    300-DPI PDF with cover, front matter, index, and back matter.
+3. **`make_listing_assets.py`** — turns the pages into Etsy listing images and
+   Pinterest pins, per `../10_Etsy_Listing.md`.
 
-Both run on your own machine (generate needs your API key + internet) and are
-safe to re-run.
+Per-volume settings (title, series, shop name, cover page, masterpiece pages)
+live in one place: **`book_config.py`**, shared by `package.py` and
+`make_listing_assets.py`. All scripts run on your own machine and are re-runnable.
 
 ---
 
@@ -69,6 +73,29 @@ Notes:
 - Edit the `BOOK = {…}` config block at the top of `package.py` per volume
   (title, series, volume, shop name, cover source page, next-volume cross-sell).
 
+## Generating shop graphics (`make_listing_assets.py`)
+
+```bash
+python make_listing_assets.py                  # build everything available
+python make_listing_assets.py --etsy-only
+python make_listing_assets.py --pinterest-only
+```
+
+Output lands in `listing/`:
+- `etsy/` — ten **2000×2000** images: cover mockup, 50-page grid, before/after,
+  lifestyle, masterpiece showcase, difficulty journey, sample collage,
+  what-you-get, series teaser, how-it-works.
+- `pinterest/` — one **1000×1500** (2:3) pin per masterpiece page.
+
+Notes:
+- Image assets whose source page is missing are skipped (with a warning), so you
+  can run this before all 50 pages exist.
+- The **before/after** right panel is a *stylized pastel wash* (an honest "what it
+  could become"), not a real color-in. For the strongest listing, swap it with
+  your own colored sample.
+- Pair these images with the **copy** in `../10_Etsy_Listing.md` (titles, tags,
+  Pinterest captions) and `../11_Payhip_Product.md`.
+
 ## The weekly loop (how this fits the factory)
 
 ```
@@ -79,7 +106,8 @@ Notes:
 4. python generate.py --regen         # produce fixed _vN versions
 5. Repeat 2-4 until all 50 are Approved
 6. python package.py --clean          # assemble the print-ready PDF
-7. Upload PDF to Etsy/Payhip; build previews/pins from the masterpiece pages
+7. python make_listing_assets.py      # build Etsy images + Pinterest pins
+8. Upload PDF + images; paste copy from ../10 and ../11; schedule the pins
 ```
 
 `regen_prompts.csv` ships with 3 example fix-rows (pages 21, 30, 32) that match
@@ -129,10 +157,13 @@ by design; only that one function is provider-specific.
 | --- | --- |
 | `generate.py` | The image-generation batch runner |
 | `package.py` | The print-ready PDF assembler |
+| `make_listing_assets.py` | The Etsy/Pinterest graphics generator |
+| `book_config.py` | Shared per-volume settings (title, series, fonts, palette) |
 | `requirements.txt` | Python dependencies |
 | `.env.example` | Template for your API key (copy to `.env`) |
 | `regen_prompts.csv` | Queue of failed pages to fix & regenerate |
 | `raw/` | Generated PNGs *(git-ignored)* |
 | `output/` | Assembled PDF(s) *(git-ignored)* |
+| `listing/` | Generated Etsy images + Pinterest pins *(git-ignored)* |
 | `qc_tracker.csv` | QC review sheet, auto-seeded *(git-ignored)* |
 | `generation_log.csv` | Per-call audit log *(git-ignored)* |
