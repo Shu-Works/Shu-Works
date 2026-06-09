@@ -3,6 +3,7 @@
 
 # Generated artifacts (regenerate locally; not part of the blueprint)
 raw/
+output/
 generation_log.csv
 qc_tracker.csv
 

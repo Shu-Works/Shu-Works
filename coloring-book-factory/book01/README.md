@@ -1,10 +1,14 @@
-# Book #1 — Image Generation Batch Runner
+# Book #1 — Production Tools (Generate → Package)
 
-Generates the 50 coloring pages of *The Enchanted Witch's Cottage* via the
-**OpenAI Images API (DALL·E 3)** from `../07_Generation_Prompts.csv`.
+Two scripts take *The Enchanted Witch's Cottage* from prompts to a sellable PDF:
 
-This is the **production** step of the weekly factory loop. It is built to run on
-your own machine (it needs your API key and internet), and to be re-run safely.
+1. **`generate.py`** — produces the 50 coloring-page PNGs via the OpenAI Images
+   API (DALL·E 3) from `../07_Generation_Prompts.csv`.
+2. **`package.py`** — assembles the approved PNGs into a print-ready, US-Letter,
+   300-DPI PDF with cover, front matter, index, and back matter.
+
+Both run on your own machine (generate needs your API key + internet) and are
+safe to re-run.
 
 ---
 
@@ -40,6 +44,31 @@ A QC sheet is seeded at `qc_tracker.csv` and an audit log at `generation_log.csv
 
 ---
 
+## Packaging the PDF (`package.py`)
+
+Once pages are generated and reviewed, assemble the book:
+
+```bash
+python package.py --matter-only        # preview cover + front/back matter (no pages)
+python package.py --clean              # full book; upscale->300 DPI + binarize (recommended)
+python package.py --clean --approved-only   # include only pages marked Approved in qc_tracker.csv
+```
+
+Output lands in `output/<Book-Title>.pdf` — a single-sided, US-Letter (8.5×11),
+300-DPI PDF in this order: **cover → title → welcome → how-to → 50 coloring
+pages → index → thank-you/cross-sell** (per `../05_Book_Concept.md`).
+
+Notes:
+- `--clean` upscales each image toward 300 DPI and **binarizes** it to pure
+  black/white — this sharpens lines for print and silently fixes minor grayscale/
+  shading (DALL·E 3's most common flaw). Strongly recommended for finals.
+- It auto-picks the **highest version** of each page (`_v3` beats `_v2` beats
+  base), so regenerated pages win without renaming anything.
+- Small footer page numbers are added by default (`--no-page-numbers` to omit);
+  the index references them.
+- Edit the `BOOK = {…}` config block at the top of `package.py` per volume
+  (title, series, volume, shop name, cover source page, next-volume cross-sell).
+
 ## The weekly loop (how this fits the factory)
 
 ```
@@ -49,7 +78,8 @@ A QC sheet is seeded at `qc_tracker.csv` and an audit log at `generation_log.csv
    (use ../09_Regeneration_Rules.md as the playbook)
 4. python generate.py --regen         # produce fixed _vN versions
 5. Repeat 2-4 until all 50 are Approved
-6. Hand the approved PNGs to packaging (PDF assembly, cover, previews)
+6. python package.py --clean          # assemble the print-ready PDF
+7. Upload PDF to Etsy/Payhip; build previews/pins from the masterpiece pages
 ```
 
 `regen_prompts.csv` ships with 3 example fix-rows (pages 21, 30, 32) that match
@@ -97,10 +127,12 @@ by design; only that one function is provider-specific.
 
 | File | Role |
 | --- | --- |
-| `generate.py` | The batch runner |
+| `generate.py` | The image-generation batch runner |
+| `package.py` | The print-ready PDF assembler |
 | `requirements.txt` | Python dependencies |
 | `.env.example` | Template for your API key (copy to `.env`) |
 | `regen_prompts.csv` | Queue of failed pages to fix & regenerate |
 | `raw/` | Generated PNGs *(git-ignored)* |
+| `output/` | Assembled PDF(s) *(git-ignored)* |
 | `qc_tracker.csv` | QC review sheet, auto-seeded *(git-ignored)* |
 | `generation_log.csv` | Per-call audit log *(git-ignored)* |
