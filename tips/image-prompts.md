@@ -84,3 +84,20 @@ in front of a bright modern office building, a rising success arrow and a glowin
 - 個別1〜5は Instagram の「配役紹介カルーセル（IG-2）」に使う
 - 画風がブレたら、気に入った1枚を参照画像にして残りを生成（i2i / スタイル参照）
 - このマスコットは**ブランド資産**。気に入った5匹を“定番”として固定し、毎回使い回す
+
+---
+
+## 7. サムネ（最終版・ペンギン不使用）「AI役員5人を従えた一人社長」
+> コンセプト：人間の主役（憧れ）＋光るAI役員チーム（商品の中身）。著作権ゼロ・テーマ直球。
+
+**メインプロンプト**
+```
+A confident young Japanese woman entrepreneur standing in the center foreground, smiling and gesturing with one hand, modern smart-casual blazer. Around and behind her float five distinct glowing holographic AI executive avatars (sleek friendly robots), each a different neon color with a clear role icon above its head: (1) a golden crown for the commander CEO, (2) a headset for customer support, (3) a wrench for the craftsman, (4) a sparkling upward chart for sales, (5) a calculator for finance. Bright modern office with large windows and a sunny city skyline, a glowing rising success arrow and a light-bulb idea icon, sparkles, cinematic rim lighting, vibrant high-saturation modern anime illustration, bold clean poster composition, sharp focal subject, uncluttered, leave generous empty space at the very top for a title.
+```
+
+**ネガティブ**
+```
+realistic photo, 3d render, garbled text, watermark, deformed hands, extra fingers, low quality, cluttered, dark, any recognizable anime or celebrity character
+```
+
+**乗せる文字（Canva等）**：大見出し「AIで『5人の役員』を雇った話」／帯「設立のやり方、ぜんぶ公開します」／極太ゴシック・紺＋赤差し色
