@@ -87,17 +87,12 @@ in front of a bright modern office building, a rising success arrow and a glowin
 
 ---
 
-## 7. サムネ（最終版・ペンギン不使用）「AI役員5人を従えた一人社長」
-> コンセプト：人間の主役（憧れ）＋光るAI役員チーム（商品の中身）。著作権ゼロ・テーマ直球。
+## 7. サムネ（最終版・オタク感・タイトル文字入り）「推しをAI役員に雇った話」
+> コンセプト：推し活する主役（オタク女子）＋“推しが具現化したAI役員”。著作権ゼロ・テーマ直球・文字込み1発。
 
-**メインプロンプト**
+**合体プロンプト（文字入り・コピペ用）**
 ```
-A confident young Japanese woman entrepreneur standing in the center foreground, smiling and gesturing with one hand, modern smart-casual blazer. Around and behind her float five distinct glowing holographic AI executive avatars (sleek friendly robots), each a different neon color with a clear role icon above its head: (1) a golden crown for the commander CEO, (2) a headset for customer support, (3) a wrench for the craftsman, (4) a sparkling upward chart for sales, (5) a calculator for finance. Bright modern office with large windows and a sunny city skyline, a glowing rising success arrow and a light-bulb idea icon, sparkles, cinematic rim lighting, vibrant high-saturation modern anime illustration, bold clean poster composition, sharp focal subject, uncluttered, leave generous empty space at the very top for a title.
-```
-
-**ネガティブ**
-```
-realistic photo, 3d render, garbled text, watermark, deformed hands, extra fingers, low quality, cluttered, dark, any recognizable anime or celebrity character
+Eye-catching Japanese info-product thumbnail illustration, bold poster style, fun otaku fan-culture vibe. In the center foreground, an enthusiastic young Japanese otaku woman with sparkling excited star-eyes and a big happy grin, casual cute fan outfit, holding a glowing penlight, surrounded by floating heart particles and sparkles as if cheering for her favorite characters. Around and behind her float five distinct glowing holographic AI executive avatars — charming original anime-style characters brought to life as her dream team, each a different neon color with a clear role icon glowing above its head: a golden crown (CEO), a headset (customer support), a wrench (craftsman), a sparkling upward chart (sales), and a calculator (finance). Background: a cozy otaku room blending into a bright modern office, soft silhouettes of generic figures and posters on shelves, a glowing rising success arrow and a light-bulb idea icon, neon glow, cinematic rim lighting, vibrant high-saturation modern anime illustration, sharp focal subject, lively but clean composition. At the very top, large bold Japanese title text reads 「推しをAI役員に雇った話」 in thick navy gothic font with a red accent; just below it a small red ribbon banner with white text reads 「設立のやり方、ぜんぶ公開します」. Crisp legible kanji, accurate Japanese typography, strong contrast, professional polished thumbnail. Avoid: realistic photo, 3d render, garbled or gibberish text, misspelled kanji, watermark, deformed hands, extra fingers, low quality, cluttered, any recognizable or existing anime / game / celebrity character (use only original designs).
 ```
 
-**乗せる文字（Canva等）**：大見出し「AIで『5人の役員』を雇った話」／帯「設立のやり方、ぜんぶ公開します」／極太ゴシック・紺＋赤差し色
+**もし日本語が崩れたら**：末尾の `「…」`2行を消して画像だけ生成 → Canva等で「推しをAI役員に雇った話／設立のやり方、ぜんぶ公開します」を乗せる（極太ゴシック・紺＋赤差し色）。
