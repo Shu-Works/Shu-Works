@@ -1,0 +1,86 @@
+<!--
+  メルマガ用 HTML テンプレート（メールクライアント互換のため table レイアウト）
+  プレースホルダは create_draft.py が置換する：
+    {{PREHEADER}} {{HEADER_IMAGE}} {{TITLE}} {{BODY}} {{CTA_TEXT}} {{CTA_URL}}
+    {{BRAND_NAME}} {{YEAR}}
+  MailerLite は配信解除リンクとして {$unsubscribe} を自動で差し込む（そのまま残すこと）。
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}}</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f1ea; -webkit-text-size-adjust:100%;">
+  <!-- preheader（受信トレイのプレビュー文。本文では非表示）-->
+  <div style="display:none; max-height:0; overflow:hidden; opacity:0; color:#f4f1ea; font-size:1px; line-height:1px;">
+    {{PREHEADER}}
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f1ea;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px; max-width:600px; background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+
+          <!-- ヘッダー画像 -->
+          <tr>
+            <td>
+              <img src="{{HEADER_IMAGE}}" alt="{{TITLE}}" width="600" style="display:block; width:100%; max-width:600px; height:auto; border:0;">
+            </td>
+          </tr>
+
+          <!-- タイトル -->
+          <tr>
+            <td style="padding:36px 40px 8px 40px;">
+              <h1 style="margin:0; font-family:Georgia, 'Times New Roman', serif; font-size:28px; line-height:1.3; color:#1a1a2e; font-weight:normal;">
+                {{TITLE}}
+              </h1>
+            </td>
+          </tr>
+
+          <!-- 本文 -->
+          <tr>
+            <td style="padding:8px 40px 8px 40px; font-family:Georgia, 'Times New Roman', serif; font-size:16px; line-height:1.7; color:#3a3a3a;">
+              {{BODY}}
+            </td>
+          </tr>
+
+          <!-- CTA ボタン -->
+          <tr>
+            <td align="center" style="padding:24px 40px 40px 40px;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="border-radius:6px; background-color:#c0563b;">
+                    <a href="{{CTA_URL}}" target="_blank"
+                       style="display:inline-block; padding:15px 38px; font-family:Helvetica, Arial, sans-serif; font-size:16px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:6px;">
+                      {{CTA_TEXT}}
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+
+        <!-- フッター -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px; max-width:600px;">
+          <tr>
+            <td style="padding:24px 40px; text-align:center; font-family:Helvetica, Arial, sans-serif; font-size:12px; line-height:1.6; color:#9a9a9a;">
+              <p style="margin:0 0 8px 0;">{{BRAND_NAME}}</p>
+              <p style="margin:0;">
+                You're receiving this because you love Japanese art and colouring.<br>
+                <a href="{$unsubscribe}" style="color:#9a9a9a; text-decoration:underline;">Unsubscribe</a>
+              </p>
+              <p style="margin:12px 0 0 0;">&copy; {{YEAR}} {{BRAND_NAME}}</p>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

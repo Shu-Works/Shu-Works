@@ -1,0 +1,21 @@
+# --- Secrets / 環境設定（絶対にコミットしない）---
+.env
+newsletter/.env
+*.env.local
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# --- 生成物・ログ ---
+newsletter/output/
+newsletter/*.log
+*.log
+
+# --- OS ---
+.DS_Store
+Thumbs.db

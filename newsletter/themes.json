@@ -1,0 +1,50 @@
+{
+  "_comment": "メルマガのテーマ定義。テーマを追加したいときはここに1ブロック足すだけ。image_keywords は Pexels 画像検索に使う。template は ANTHROPIC_API_KEY が無いときのフォールバック文面。",
+  "themes": {
+    "japanese_culture": {
+      "title": "Japanese Culture",
+      "image_keywords": "japan traditional temple kimono lantern",
+      "angle": "Everyday rituals and craft traditions that quietly shape Japanese daily life.",
+      "template": {
+        "subject": "The quiet art hidden in an ordinary Japanese morning",
+        "preheader": "A small ritual, a deep meaning — colour it in.",
+        "paragraphs": [
+          "There is a particular hour in Japan, just after sunrise, when the streets are still half-asleep. A shopkeeper sweeps the stone path in front of her store. Steam rises from a kettle. Somewhere, a temple bell marks the start of the day. None of it is rushed. All of it is deliberate.",
+          "This is the part of Japanese culture that rarely makes it onto a postcard: not the festivals or the neon, but the small, repeated acts of care. The way a meal is arranged on the plate. The bow that says more than words. The patience of a craftsman who has made the same thing, beautifully, for forty years.",
+          "We design our colouring pages around exactly these moments — the lantern-lit alleyway, the tea house in the rain, the grandmother folding paper cranes. Each scene is drawn so that as your pencil moves, you slow down too. You start to notice the details an artist noticed first.",
+          "Pour yourself something warm, choose your colours, and let an ordinary Japanese morning unfold under your hands."
+        ]
+      }
+    },
+    "four_seasons": {
+      "title": "The Four Seasons of Japan",
+      "image_keywords": "japan four seasons cherry blossom autumn maple snow",
+      "angle": "How Japan lives in deep harmony with the turning of the year.",
+      "template": {
+        "subject": "In Japan, the calendar has 72 seasons — not four",
+        "preheader": "From first cherry blossom to last falling leaf.",
+        "paragraphs": [
+          "Most of the world divides the year into four seasons. Japan, traditionally, counted seventy-two. Each lasts only about five days: 'the first peach blossoms,' 'the time when frost stops falling,' 'the season bears retreat into their dens.' To live this way is to notice that the world is always, gently, changing.",
+          "Spring arrives as a pale pink wave moving north across the islands, and for two weeks the whole country looks up. Summer is the green roar of cicadas and paper fans. Autumn turns the mountains to fire-coloured maple. Then winter quiets everything under snow, and the hot springs steam against a white sky.",
+          "Our seasonal colouring collections follow this rhythm. The cherry blossoms in spring, the fireworks of summer, the red maples of autumn, the snow lantern of winter — each one is an invitation to feel the year passing slowly, page by page.",
+          "Whatever season is outside your window right now, there is a Japan to colour that matches it."
+        ]
+      }
+    },
+    "retro_landscapes": {
+      "title": "Retro Japanese Landscapes",
+      "image_keywords": "japan retro showa vintage street neon old town",
+      "angle": "The nostalgic Showa-era Japan of small shops, trains and warm streetlight.",
+      "template": {
+        "subject": "A Japan you can almost remember — even if you've never been",
+        "preheader": "Showa-era streets, drawn for you to colour.",
+        "paragraphs": [
+          "There is a version of Japan that exists mostly in memory and old photographs: the Showa era. Hand-painted shop signs. A single red telephone outside the corner store. The local train rattling past rice fields at dusk, its windows glowing yellow. It feels nostalgic even to people who never lived it.",
+          "These streets were smaller, slower, and full of texture — a vending machine humming on a quiet corner, laundry strung between wooden houses, a cat asleep on a warm tin roof. It is the Japan of Ghibli films and grandparents' stories, and somehow it feels like home.",
+          "We draw these retro scenes with all their lovely imperfection, so you can bring the colour back yourself. Choose the exact orange of a 1970s sunset, the faded blue of an old noren curtain, the warm glow of a streetlamp coming on at dusk.",
+          "Step back into a Japan that never quite existed — and make it yours, one quiet street at a time."
+        ]
+      }
+    }
+  }
+}
