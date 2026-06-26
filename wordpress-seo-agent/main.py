@@ -183,6 +183,10 @@ class Draft:
     outline: str = ""
     # 競合分析の結果テキスト（ループ間で再取得しないようキャッシュ）
     competitor: str = ""
+    # 競合 H2 集計で得た「必須テーマ」（監査での網羅性突合に使う）
+    must_cover: list[str] = field(default_factory=list)
+    # 競合分析を取得済みか（空文字でも再取得しないためのフラグ）
+    competitor_loaded: bool = False
     # 直近の監査フィードバック（リライト時に各フェーズへ渡す）
     feedback: Optional[AuditResult] = None
 
@@ -520,19 +524,26 @@ class SEOAgent:
             logger.warning("テーマ集計に失敗（per-page 情報のみ使用）: %s", exc)
             return None
 
-    def _competitor_report(self, keyword: str) -> str:
-        """競合ページを収集し、per-page 概要 + 必須/手薄テーマ集計をテキスト化する。"""
+    def _competitor_report(self, keyword: str) -> tuple[str, list[str]]:
+        """
+        競合ページを収集し、per-page 概要 + 必須/手薄テーマ集計をテキスト化する。
+
+        Returns:
+            (レポートテキスト, 必須テーマのリスト)。必須テーマは監査での突合に使う。
+        """
         pages = gather_competitor_pages(keyword, self.settings)
         if not pages:
-            return ""
+            return "", []
 
         report = CompetitorAnalyzer.format_pages(pages)
+        must_cover: list[str] = []
 
         headings = [h for p in pages for h in p.get("h2", [])]
         # 集計はある程度の見出し数があるときのみ意味を持つ。
         if len(headings) >= 5:
             themes = self._cluster_themes(keyword, headings, len(pages))
             if themes:
+                must_cover = themes.must_cover
                 report += "\n\n=== 競合 H2 集計 ===\n"
                 report += "■ 必須テーマ（網羅性のため外せない）:\n"
                 report += "\n".join(f"- {t}" for t in themes.must_cover) or "- （特になし）"
@@ -540,7 +551,7 @@ class SEOAgent:
                 report += "\n".join(f"- {t}" for t in themes.underserved) or "- （特になし）"
                 if themes.notes:
                     report += f"\n■ 所見: {themes.notes}"
-        return report
+        return report, must_cover
 
     # --- 各フェーズ ----------------------------------------------------------
     def analyze(self, draft: Draft) -> None:
@@ -548,8 +559,9 @@ class SEOAgent:
         logger.info("[分析] keyword=%s", draft.keyword)
 
         # 競合分析はループ間で不変なので初回のみ取得してキャッシュ。
-        if not draft.competitor:
-            draft.competitor = self._competitor_report(draft.keyword)
+        if not draft.competitor_loaded:
+            draft.competitor, draft.must_cover = self._competitor_report(draft.keyword)
+            draft.competitor_loaded = True
 
         system = (
             "あなたは E-E-A-T を重視する日本語 SEO のシニアストラテジストです。"
@@ -675,13 +687,23 @@ class SEOAgent:
             "- 独自性・E-E-A-T の担保\n"
             "- 日本語の自然さ・読みやすさ（スマホ前提）\n"
             "- HTML 構造（見出し・箇条書き・表）の適切さ\n"
+            "- 競合の必須テーマ（提示があれば）の網羅\n"
             "甘い評価は禁止。基準を満たさなければ容赦なく不合格にし、"
-            "改善点を具体的に列挙すること。"
+            "改善点を具体的に列挙すること。必須テーマの取りこぼしは重大な欠陥として"
+            "減点し、不足テーマ名を improvements に明記すること。"
         )
+        must_cover_block = ""
+        if draft.must_cover:
+            must_cover_block = (
+                "\n=== 競合の必須テーマ（網羅必須。取りこぼしは減点）===\n"
+                + "\n".join(f"- {t}" for t in draft.must_cover)
+                + "\n各テーマが本文で実質的に扱われているか確認すること。\n"
+            )
         user = (
             f"狙うキーワード: 「{draft.keyword}」\n"
             f"タイトル: {draft.title}\n"
-            f"合格ライン: score >= {self.settings.pass_score} かつ 重大な欠陥なし\n\n"
+            f"合格ライン: score >= {self.settings.pass_score} かつ 重大な欠陥なし\n"
+            f"{must_cover_block}\n"
             "=== 本文 HTML ===\n"
             f"{draft.body_html}\n\n"
             "上記を採点し、pass / score / reason / improvements を返してください。"
