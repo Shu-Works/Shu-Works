@@ -1,0 +1,17 @@
+# WordPress SEO Agent - 依存ライブラリ
+# Python 3.11+ 推奨
+
+# Anthropic Claude API
+anthropic>=0.40.0
+
+# 環境変数管理
+python-dotenv>=1.0.0
+
+# HTTP クライアント（WordPress REST API 通信）
+requests>=2.32.0
+
+# ──── 将来拡張用（競合分析API連携） ────
+# SEO API クライアント（利用時はコメントを外す）
+# serpapi>=0.1.5          # SerpAPI: Google検索結果取得
+# dataforseo-client       # DataForSEO: 詳細なSEOデータ
+# pytrends>=4.9.2         # Google Trends データ取得
