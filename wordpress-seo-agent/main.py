@@ -156,6 +156,20 @@ class AuditResult(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class ThemeReport(BaseModel):
+    """競合 H2 見出しを意味クラスタリングした網羅性レポート（Structured Output）。"""
+
+    must_cover: list[str] = Field(
+        default_factory=list,
+        description="上位の大半が扱う必須テーマ（網羅性のために外せない）",
+    )
+    underserved: list[str] = Field(
+        default_factory=list,
+        description="一部しか扱わない／手薄なテーマ（独自性・差別化の好機）",
+    )
+    notes: str = Field(default="", description="網羅性・差別化に関する短い所見")
+
+
 @dataclass
 class Draft:
     """パイプライン内で受け渡す記事の状態。"""
@@ -167,6 +181,8 @@ class Draft:
     categories: list[str] = field(default_factory=list)
     analysis: str = ""
     outline: str = ""
+    # 競合分析の結果テキスト（ループ間で再取得しないようキャッシュ）
+    competitor: str = ""
     # 直近の監査フィードバック（リライト時に各フェーズへ渡す）
     feedback: Optional[AuditResult] = None
 
@@ -280,49 +296,58 @@ class CompetitorAnalyzer:
             "text_len": text_len,
         }
 
-    def insights(self, keyword: str) -> str:
-        """上位ページの構成傾向を要約したテキストを返す（無効時は空文字）。"""
+    def gather(self, keyword: str) -> list[dict]:
+        """
+        上位ページの構成（title / H2 / H3数 / 概算文字量）を収集して返す。
+
+        Returns:
+            ページ構成 dict のリスト（無効・取得失敗時は空リスト）。
+        """
         provider = self._provider()
         if provider == "none":
             logger.info("競合分析: 検索プロバイダ未設定のためスキップ（内部知識で代替）")
-            return ""
+            return []
 
         urls = self._search_urls(keyword)[: self.settings.competitor_top_n]
         if not urls:
             logger.info("競合分析: 上位 URL を取得できませんでした")
-            return ""
+            return []
 
         logger.info("競合分析: %s 経由で上位 %d 件を解析", provider, len(urls))
-        lines: list[str] = ["上位検索結果の構成傾向（参考。模倣ではなく差別化の材料）:"]
-        for i, url in enumerate(urls, 1):
+        pages: list[dict] = []
+        for url in urls:
             info = self._page_structure(url)
-            if not info:
-                continue
+            if info:
+                pages.append(info)
+        return pages
+
+    @staticmethod
+    def format_pages(pages: list[dict]) -> str:
+        """収集したページ構成を、人間/LLM が読める一覧テキストに整形する。"""
+        if not pages:
+            return ""
+        lines = ["上位検索結果の構成（参考。模倣ではなく差別化の材料）:"]
+        for i, info in enumerate(pages, 1):
             h2_sample = " ｜ ".join(info["h2"][:5]) or "（H2なし）"
             lines.append(
                 f"{i}. {info['title']}\n"
                 f"   H2例: {h2_sample}\n"
                 f"   H3数: {info['h3_count']} / 概算本文量: 約{info['text_len']}文字"
             )
-        return "\n".join(lines) if len(lines) > 1 else ""
+        return "\n".join(lines)
 
 
-def fetch_competitor_insights(keyword: str, settings: Settings) -> str:
+def gather_competitor_pages(keyword: str, settings: Settings) -> list[dict]:
     """
-    競合（検索上位ページ）の傾向を要約して返す（analyze から呼ばれる薄いラッパ）。
+    競合（検索上位ページ）の構成を収集する（SEOAgent から呼ばれる薄いラッパ）。
 
-    Args:
-        keyword: 狙う検索キーワード。
-        settings: 検索プロバイダ設定を含む実行設定。
-
-    Returns:
-        競合傾向の要約テキスト（無効・取得失敗時は空文字）。
+    競合分析の失敗で本処理を止めないよう、例外は握りつぶして空リストを返す。
     """
     try:
-        return CompetitorAnalyzer(settings).insights(keyword)
-    except Exception as exc:  # 競合分析の失敗で本処理を止めない
+        return CompetitorAnalyzer(settings).gather(keyword)
+    except Exception as exc:
         logger.warning("競合分析でエラー（無視して続行）: %s", exc)
-        return ""
+        return []
 
 
 # -----------------------------------------------------------------------------
@@ -460,11 +485,71 @@ class SEOAgent:
             message = self.client.messages.create(**kwargs)
         return "".join(b.text for b in message.content if b.type == "text").strip()
 
+    # --- 競合分析（H2 集計 → 必須/手薄テーマ抽出） --------------------------
+    def _cluster_themes(self, keyword: str, headings: list[str], page_count: int) -> Optional[ThemeReport]:
+        """
+        収集した競合 H2 見出しを意味でクラスタリングし、必須/手薄テーマを抽出する。
+
+        表記揺れのある日本語見出しを束ねるため、単純な文字列一致ではなく LLM の
+        Structured Outputs を使う。
+        """
+        system = (
+            "あなたは SEO の競合分析アナリストです。検索上位記事の見出し（H2）一覧を受け取り、"
+            "意味の近いものをテーマに束ねて分類します。表記の揺れは同一テーマとして扱います。"
+            "- must_cover: 上位の大半が扱う＝網羅性のために外せない必須テーマ\n"
+            "- underserved: 一部しか扱わない／手薄＝独自性を出せる差別化テーマ\n"
+            "キーワードの検索意図に無関係な見出し（運営者情報・関連記事リンク等）は除外すること。"
+        )
+        user = (
+            f"狙うキーワード: 「{keyword}」\n"
+            f"分析対象: 上位 {page_count} 記事の H2 見出し（計 {len(headings)} 件）\n\n"
+            "=== H2 見出し一覧 ===\n"
+            + "\n".join(f"- {h}" for h in headings)
+            + "\n\nこれらを must_cover / underserved / notes に分類してください。"
+        )
+        try:
+            message = self.client.messages.parse(
+                model=self.settings.model,
+                max_tokens=2000,
+                system=system,
+                messages=[{"role": "user", "content": user}],
+                output_format=ThemeReport,
+            )
+            return message.parsed_output
+        except Exception as exc:
+            logger.warning("テーマ集計に失敗（per-page 情報のみ使用）: %s", exc)
+            return None
+
+    def _competitor_report(self, keyword: str) -> str:
+        """競合ページを収集し、per-page 概要 + 必須/手薄テーマ集計をテキスト化する。"""
+        pages = gather_competitor_pages(keyword, self.settings)
+        if not pages:
+            return ""
+
+        report = CompetitorAnalyzer.format_pages(pages)
+
+        headings = [h for p in pages for h in p.get("h2", [])]
+        # 集計はある程度の見出し数があるときのみ意味を持つ。
+        if len(headings) >= 5:
+            themes = self._cluster_themes(keyword, headings, len(pages))
+            if themes:
+                report += "\n\n=== 競合 H2 集計 ===\n"
+                report += "■ 必須テーマ（網羅性のため外せない）:\n"
+                report += "\n".join(f"- {t}" for t in themes.must_cover) or "- （特になし）"
+                report += "\n■ 手薄テーマ（独自性の好機。差別化材料に）:\n"
+                report += "\n".join(f"- {t}" for t in themes.underserved) or "- （特になし）"
+                if themes.notes:
+                    report += f"\n■ 所見: {themes.notes}"
+        return report
+
     # --- 各フェーズ ----------------------------------------------------------
     def analyze(self, draft: Draft) -> None:
         """[分析] 検索意図（潜在・顕在ニーズ）と E-E-A-T 方針を分析する。"""
         logger.info("[分析] keyword=%s", draft.keyword)
-        competitor = fetch_competitor_insights(draft.keyword, self.settings)
+
+        # 競合分析はループ間で不変なので初回のみ取得してキャッシュ。
+        if not draft.competitor:
+            draft.competitor = self._competitor_report(draft.keyword)
 
         system = (
             "あなたは E-E-A-T を重視する日本語 SEO のシニアストラテジストです。"
@@ -479,10 +564,14 @@ class SEOAgent:
             "2. 顕在ニーズ（箇条書き）\n"
             "3. 潜在ニーズ（箇条書き）\n"
             "4. E-E-A-T を担保するために本文へ盛り込むべき要素\n"
-            "5. 競合に対する独自性の打ち出し方\n"
+            "5. 網羅すべきテーマ（競合の必須テーマは必ずカバーする）\n"
+            "6. 競合に対する独自性の打ち出し方（手薄テーマを差別化に活かす）\n"
         )
-        if competitor:
-            user += f"\n参考（競合傾向）:\n{competitor}\n"
+        if draft.competitor:
+            user += (
+                f"\n=== 競合分析（参考。模倣ではなく差別化の材料）===\n{draft.competitor}\n"
+                "\n必須テーマは漏らさず網羅し、手薄テーマや独自の切り口で差別化してください。\n"
+            )
         if draft.feedback:
             user += (
                 "\n前回の監査で不合格でした。次の改善点を踏まえ、分析を更新してください:\n"
