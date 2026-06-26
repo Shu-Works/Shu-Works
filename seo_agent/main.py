@@ -8,6 +8,7 @@ import logging
 import os
 import re
 import sys
+import time
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -40,6 +41,49 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 WP_URL = os.getenv("WP_URL", "")          # 例: https://example.com
 WP_USER = os.getenv("WP_USER", "")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD", "")
+
+# API呼び出しのリトライ設定
+API_MAX_RETRIES = 4
+API_BACKOFF_BASE = 2.0            # 秒（2, 4, 8, 16... と指数的に増加）
+
+# 合格ライン（監査LLMと共有する閾値）
+AUDIT_PASS_SCORE = 75
+
+# 記事品質の客観基準（決定論的チェック / 監査LLMにも実数として渡す）
+MIN_WORD_COUNT = 2000            # 本文の最低文字数（タグ除く）
+MAX_WORD_COUNT = 6000            # 冗長すぎる記事を防ぐ上限
+KEYWORD_DENSITY_MIN = 0.005      # キーワード密度の下限（0.5%）
+KEYWORD_DENSITY_MAX = 0.030      # キーワード密度の上限（3.0%／過剰最適化防止）
+MIN_H2_COUNT = 3                 # 最低H2数
+
+# ──────────────────────────────────────────────
+# 共有採点基準（RUBRIC）
+# 執筆フェーズと監査フェーズの両方に注入し、
+# 「ライターが採点表を知った上で書く」状態を作る。
+# ここを一元管理することで、両者の評価軸が永久にズレない。
+# ──────────────────────────────────────────────
+RUBRIC = """【SEO品質 採点基準（各20点 × 5項目 = 100点満点 / 75点で合格）】
+
+1. 検索意図の充足度（20点）
+   - 顕在ニーズに直接答えているか
+   - 潜在ニーズ（読者が言語化できていない不安・疑問）まで先回りして解消しているか
+
+2. コンテンツの網羅性（20点）
+   - 競合上位が扱うトピックを漏れなくカバーしているか
+   - かつ、競合にない独自の切り口・一次情報があるか
+
+3. 日本語品質（20点）
+   - 自然で読みやすい丁寧語。重複・冗長・助詞ミスがない
+   - 1段落3〜5行、結論ファースト
+
+4. E-E-A-T（20点）
+   - Experience（実体験）・Expertise（専門性）が文章から伝わるか
+   - 根拠・出典・具体例で信頼性（Trust）を担保しているか
+
+5. HTML/技術的SEO（20点）
+   - 見出し階層（H2/H3）が論理的
+   - 箇条書き（ul/ol）・表（table）がスマホ可読性に貢献している
+   - キーワード密度が適切（0.5〜3.0%）で過剰最適化がない"""
 
 # ──────────────────────────────────────────────
 # データクラス
@@ -76,6 +120,46 @@ class StructureResult:
 
 
 @dataclass
+class ContentMetrics:
+    """記事HTMLから決定論的に算出した客観指標（雰囲気でなく事実で採点するため）"""
+    char_count: int                    # タグを除いた本文文字数
+    keyword_count: int                 # キーワード出現回数
+    keyword_density: float             # キーワード密度（0.0〜1.0）
+    h2_count: int
+    h3_count: int
+    has_list: bool                     # ul/ol を含むか
+    has_table: bool                    # table を含むか
+    affiliate_marks: int               # アフィリエイトリンクマーカー数
+    unbalanced_tags: list[str]         # 開閉が一致しないタグ（HTML健全性）
+
+    def hard_failures(self, keyword: str) -> list[str]:
+        """合否以前の客観的な不備（機械的に判定可能な致命傷）を列挙する"""
+        problems: list[str] = []
+        if self.char_count < MIN_WORD_COUNT:
+            problems.append(
+                f"本文が短すぎます（{self.char_count}字 < 最低{MIN_WORD_COUNT}字）")
+        if self.char_count > MAX_WORD_COUNT:
+            problems.append(
+                f"本文が冗長です（{self.char_count}字 > 上限{MAX_WORD_COUNT}字）")
+        if self.keyword_density < KEYWORD_DENSITY_MIN:
+            problems.append(
+                f"キーワード「{keyword}」の密度が低すぎます"
+                f"（{self.keyword_density:.2%} < {KEYWORD_DENSITY_MIN:.1%}）")
+        if self.keyword_density > KEYWORD_DENSITY_MAX:
+            problems.append(
+                f"キーワード「{keyword}」が過剰最適化です"
+                f"（{self.keyword_density:.2%} > {KEYWORD_DENSITY_MAX:.1%}）")
+        if self.h2_count < MIN_H2_COUNT:
+            problems.append(f"H2見出しが不足（{self.h2_count}個 < 最低{MIN_H2_COUNT}個）")
+        if not (self.has_list or self.has_table):
+            problems.append("箇条書き(ul/ol)も表(table)も無く、スマホ可読性が低い")
+        if self.unbalanced_tags:
+            problems.append(
+                f"HTMLタグの開閉不一致: {', '.join(self.unbalanced_tags)}")
+        return problems
+
+
+@dataclass
 class AuditResult:
     """監査結果（Structured Output）"""
     pass_audit: bool
@@ -102,11 +186,39 @@ def _get_client() -> anthropic.Anthropic:
     return anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 
+def _messages_create_with_retry(client: anthropic.Anthropic, **kwargs):
+    """
+    client.messages.create を指数バックオフ付きでラップする。
+    一時的な過負荷(529)・レート制限(429)・接続エラーを自動リトライし、
+    自律ループ全体がワンショットのAPI失敗で停止しないようにする。
+    """
+    last_exc: Optional[Exception] = None
+    for attempt in range(1, API_MAX_RETRIES + 1):
+        try:
+            return client.messages.create(**kwargs)
+        except (anthropic.APIStatusError, anthropic.APIConnectionError, anthropic.RateLimitError) as e:
+            last_exc = e
+            # 4xx（リクエスト不正）はリトライしても無駄なので即時中断（429除く）
+            status = getattr(e, "status_code", None)
+            if status is not None and 400 <= status < 500 and status != 429:
+                logger.error("API呼び出しエラー（リトライ不可 status=%s）: %s", status, e)
+                raise
+            if attempt == API_MAX_RETRIES:
+                break
+            wait = API_BACKOFF_BASE ** attempt
+            logger.warning("API呼び出し失敗 (試行 %d/%d, status=%s) — %.0f秒後に再試行: %s",
+                           attempt, API_MAX_RETRIES, status, wait, e)
+            time.sleep(wait)
+    logger.error("API呼び出しが %d 回のリトライ後も失敗しました", API_MAX_RETRIES)
+    raise last_exc  # type: ignore[misc]
+
+
 def call_claude(system: str, user: str, max_tokens: int = 4096) -> str:
     """通常のClaude呼び出し（テキスト返却）"""
     client = _get_client()
     logger.debug("Claude呼び出し開始 (model=%s, max_tokens=%d)", CLAUDE_MODEL, max_tokens)
-    message = client.messages.create(
+    message = _messages_create_with_retry(
+        client,
         model=CLAUDE_MODEL,
         max_tokens=max_tokens,
         system=system,
@@ -129,7 +241,8 @@ def call_claude_json(system: str, user: str, schema: dict, max_tokens: int = 204
         "description": "スキーマに従ったJSON出力",
         "input_schema": schema,
     }
-    message = client.messages.create(
+    message = _messages_create_with_retry(
+        client,
         model=CLAUDE_MODEL,
         max_tokens=max_tokens,
         system=system,
@@ -358,7 +471,10 @@ def create_article(structure: StructureResult, analysis: AnalysisResult) -> str:
 【文章ルール】
 - 日本語は丁寧語（〜です/〜ます）で統一
 - 回りくどい表現を避け、結論ファースト
-- 「〜してみてください」「〜でしょう」等のぼかし表現は最小限に"""
+- 「〜してみてください」「〜でしょう」等のぼかし表現は最小限に
+
+【重要】この記事は以下の基準で採点されます。最初から満点を狙って書いてください：
+""" + RUBRIC
 
     user = f"""## 記事タイトル
 {structure.title}
@@ -430,6 +546,61 @@ def proofread_article(html_content: str, analysis: AnalysisResult) -> str:
 
 
 # ──────────────────────────────────────────────
+# 決定論的メトリクス算出（雰囲気採点の排除）
+# ──────────────────────────────────────────────
+
+def compute_content_metrics(html_content: str, keyword: str) -> ContentMetrics:
+    """
+    記事HTMLから機械的に算出できる客観指標を計算する。
+    LLM監査の前にこれを通すことで、「実数」に基づいた採点が可能になる。
+    """
+    # タグを除いたプレーンテキスト（文字数・密度の算出用）
+    plain = re.sub(r"<[^>]+>", "", html_content)
+    plain = re.sub(r"<!--.*?-->", "", plain, flags=re.DOTALL)
+    plain = re.sub(r"\s+", "", plain)               # 日本語は空白で単語分割できないため空白除去
+    char_count = len(plain)
+
+    keyword_count = plain.count(keyword.replace(" ", "")) if keyword else 0
+    # キーワード密度 = (キーワード文字数 × 出現回数) / 全文字数
+    kw_len = len(keyword.replace(" ", "")) or 1
+    keyword_density = (keyword_count * kw_len / char_count) if char_count else 0.0
+
+    h2_count = len(re.findall(r"<h2\b", html_content, re.IGNORECASE))
+    h3_count = len(re.findall(r"<h3\b", html_content, re.IGNORECASE))
+    has_list = bool(re.search(r"<(ul|ol)\b", html_content, re.IGNORECASE))
+    has_table = bool(re.search(r"<table\b", html_content, re.IGNORECASE))
+    affiliate_marks = len(re.findall(r"AFFILIATE_LINK", html_content))
+
+    # 主要ブロックタグの開閉バランスをチェック（簡易HTML健全性）
+    unbalanced: list[str] = []
+    for tag in ("h2", "h3", "p", "ul", "ol", "li", "table", "tr", "td", "th"):
+        opens = len(re.findall(rf"<{tag}\b", html_content, re.IGNORECASE))
+        closes = len(re.findall(rf"</{tag}\s*>", html_content, re.IGNORECASE))
+        if opens != closes:
+            unbalanced.append(f"{tag}(開{opens}/閉{closes})")
+
+    metrics = ContentMetrics(
+        char_count=char_count,
+        keyword_count=keyword_count,
+        keyword_density=keyword_density,
+        h2_count=h2_count,
+        h3_count=h3_count,
+        has_list=has_list,
+        has_table=has_table,
+        affiliate_marks=affiliate_marks,
+        unbalanced_tags=unbalanced,
+    )
+    logger.info(
+        "[メトリクス] %d字 / KW出現%d回(密度%.2f%%) / H2:%d H3:%d / list:%s table:%s / アフィリ:%d箇所",
+        char_count, keyword_count, keyword_density * 100,
+        h2_count, h3_count, has_list, has_table, affiliate_marks,
+    )
+    if metrics.unbalanced_tags:
+        logger.warning("[メトリクス] HTMLタグ開閉不一致: %s", ", ".join(metrics.unbalanced_tags))
+    return metrics
+
+
+# ──────────────────────────────────────────────
 # フェーズ 5: SEO監査（Structured Output）
 # ──────────────────────────────────────────────
 
@@ -437,30 +608,49 @@ def audit_article(
     html_content: str,
     structure: StructureResult,
     analysis: AnalysisResult,
+    metrics: ContentMetrics,
 ) -> AuditResult:
     """
     記事をSEO観点で監査し、合否・スコア・改善点をJSON形式で返す。
     tool_use を使用してパース可能なJSONを保証する。
-    合格基準: score >= 75 かつ重大な問題がないこと
+    合格基準: 機械的な致命傷がなく、かつ score >= AUDIT_PASS_SCORE。
+
+    決定論的メトリクス(metrics)で計測した「実数」を監査LLMに渡し、
+    雰囲気でなく事実に基づいた採点をさせる。さらに hard_failures があれば
+    LLMの判定に関わらず不合格に倒す（過大評価を機械でガードする）。
     """
     logger.info("[監査] SEO監査開始")
 
-    system = """あなたは厳格なSEO監査エキスパートです。
-記事をGoogleの品質ガイドライン（E-E-A-T・検索意図充足・技術的SEO）に照らして採点します。
-75点以上で合格（pass: true）とし、それ未満は不合格（pass: false）とします。
-採点は甘くせず、日本のSEO競合環境を考慮した厳格な基準で行ってください。"""
+    hard_failures = metrics.hard_failures(analysis.keyword)
+
+    system = f"""あなたは厳格なSEO監査エキスパートです。
+記事をGoogleの品質ガイドラインに照らし、以下の採点基準で厳密に採点します。
+{AUDIT_PASS_SCORE}点以上で合格（pass: true）、それ未満は不合格（pass: false）とします。
+採点は甘くせず、日本のSEO競合環境を考慮した厳格な基準で行ってください。
+提示される「客観メトリクス（実測値）」を必ず採点根拠に組み込んでください。
+
+{RUBRIC}"""
+
+    metrics_block = f"""## 客観メトリクス（機械計測した実測値・採点に必ず反映すること）
+- 本文文字数: {metrics.char_count}字（推奨 {MIN_WORD_COUNT}〜{MAX_WORD_COUNT}字）
+- キーワード出現: {metrics.keyword_count}回 / 密度 {metrics.keyword_density:.2%}（推奨 {KEYWORD_DENSITY_MIN:.1%}〜{KEYWORD_DENSITY_MAX:.1%}）
+- 見出し: H2 {metrics.h2_count}個 / H3 {metrics.h3_count}個
+- 箇条書き(ul/ol): {'あり' if metrics.has_list else 'なし'} / 表(table): {'あり' if metrics.has_table else 'なし'}
+- アフィリエイトリンク挿入箇所: {metrics.affiliate_marks}箇所
+- HTMLタグ開閉不一致: {', '.join(metrics.unbalanced_tags) if metrics.unbalanced_tags else 'なし（健全）'}"""
+
+    hard_block = (
+        "\n\n## 機械検出された致命的不備（これらは減点必須）\n"
+        + "\n".join(f"- {p}" for p in hard_failures)
+        if hard_failures else ""
+    )
 
     user = f"""## 評価対象
 - キーワード: {analysis.keyword}
 - 記事タイトル: {structure.title}
 - メタディスクリプション: {structure.meta_description}
 
-## 評価観点（各20点満点 × 5項目 = 100点）
-1. **検索意図の充足度**: 顕在・潜在ニーズを適切にカバーしているか
-2. **コンテンツの網羅性**: H2/H3で必要なトピックを漏れなく扱っているか
-3. **日本語品質**: 読みやすく自然な日本語か
-4. **E-E-A-T**: 経験・専門性・権威性・信頼性が文章から伝わるか
-5. **HTML/技術的SEO**: 見出し構造・箇条書き・表の使い方が適切か
+{metrics_block}{hard_block}
 
 ## 評価対象HTML
 {html_content[:8000]}{"...(以下省略)" if len(html_content) > 8000 else ""}"""
@@ -492,11 +682,27 @@ def audit_article(
     }
 
     raw = call_claude_json(system, user, schema)
+    llm_pass = bool(raw["pass_audit"])
+    score = int(raw["score"])
+    reason = raw["reason"]
+    improvements = list(raw.get("improvements", []))
+
+    # 機械ガード: 致命的不備があればLLMの判定に関わらず不合格に倒す。
+    # スコアの整合性（pass=true なのに閾値未満）も機械側で正す。
+    final_pass = llm_pass and not hard_failures and score >= AUDIT_PASS_SCORE
+    if hard_failures:
+        # LLMが見落とした客観的不備を改善指示の先頭に必ず含める
+        improvements = hard_failures + [i for i in improvements if i not in hard_failures]
+        if llm_pass:
+            reason = f"機械検出の致命的不備により不合格に補正。{reason}"
+            logger.warning("[監査] LLMは合格判定だが機械ガードで不合格に補正（致命的不備%d件）",
+                           len(hard_failures))
+
     result = AuditResult(
-        pass_audit=raw["pass_audit"],
-        reason=raw["reason"],
-        score=raw["score"],
-        improvements=raw.get("improvements", []),
+        pass_audit=final_pass,
+        reason=reason,
+        score=score,
+        improvements=improvements,
     )
     status = "合格 ✓" if result.pass_audit else "不合格 ✗"
     logger.info("[監査] %s - スコア: %d/100 - %s", status, result.score, result.reason)
@@ -629,8 +835,9 @@ def run_seo_agent(keyword: str) -> None:
         # ── フェーズ 4: 校正 ──
         html_content = proofread_article(html_content, analysis)
 
-        # ── フェーズ 5: 監査 ──
-        audit = audit_article(html_content, structure, analysis)
+        # ── フェーズ 5: 監査（決定論的メトリクス + LLM採点 + 機械ガード）──
+        metrics = compute_content_metrics(html_content, analysis.keyword)
+        audit = audit_article(html_content, structure, analysis, metrics)
         last_bundle = ArticleBundle(
             structure=structure,
             html_content=html_content,
