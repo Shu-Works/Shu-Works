@@ -1,0 +1,23 @@
+{
+  "_comment": "提携クリニックの案件データ。これを clinics.json にコピーして実データに置き換える。name と url(ASPアフィリリンク) は必須。types/regions はキーワードとのマッチに使う。",
+  "clinics": [
+    {
+      "name": "サンプル近視クリニックA",
+      "url": "https://px.a8.net/svt/ejp?a8mat=XXXXXXXX",
+      "types": ["レーシック", "ICL"],
+      "regions": ["東京", "大阪", "名古屋", "福岡"],
+      "catch": "症例実績が豊富な大手。無料適応検査あり",
+      "price": "レーシック 9.8万円〜 / ICL 46万円〜",
+      "points": ["無料カウンセリング", "全国に院", "返金保証制度"]
+    },
+    {
+      "name": "サンプルICL専門クリニックB",
+      "url": "https://h.accesstrade.net/sp/cc?rk=XXXXXXXX",
+      "types": ["ICL"],
+      "regions": ["東京"],
+      "catch": "ICL認定医が在籍するICL特化クリニック",
+      "price": "ICL 38万円〜",
+      "points": ["ICL認定医", "夜間診療", "分割払い対応"]
+    }
+  ]
+}

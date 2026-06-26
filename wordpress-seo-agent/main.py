@@ -27,9 +27,11 @@ Structured Outputs（messages.parse + Pydantic）で必ずパース可能な JSO
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import logging
 import os
+import re
 import sys
 from dataclasses import dataclass, field
 from typing import Optional
@@ -75,6 +77,10 @@ class Settings:
     google_cse_id: str = ""
     competitor_top_n: int = 5
 
+    # アフィリエイト案件（提携クリニック）。ファイルが無ければ空＝機能オフ。
+    clinics: list[dict] = field(default_factory=list)
+    clinics_per_article: int = 5
+
     @classmethod
     def from_env(cls) -> "Settings":
         """`.env` を読み込み、必須項目を検証して Settings を返す。"""
@@ -108,6 +114,8 @@ class Settings:
             google_cse_api_key=os.getenv("GOOGLE_CSE_API_KEY", "").strip(),
             google_cse_id=os.getenv("GOOGLE_CSE_ID", "").strip(),
             competitor_top_n=int(os.getenv("SEO_COMPETITOR_TOP_N", "5") or "5"),
+            clinics=load_clinics(os.getenv("CLINICS_FILE", "clinics.json").strip() or "clinics.json"),
+            clinics_per_article=int(os.getenv("CLINICS_PER_ARTICLE", "5") or "5"),
         )
         logger.info(
             "設定読み込み完了 model=%s pass_score=%s max_loops=%s wp=%s",
@@ -189,6 +197,8 @@ class Draft:
     competitor_loaded: bool = False
     # 直近の監査フィードバック（リライト時に各フェーズへ渡す）
     feedback: Optional[AuditResult] = None
+    # この記事で紹介する提携クリニック（キーワードに応じて選定）
+    clinics: list[dict] = field(default_factory=list)
 
 
 # -----------------------------------------------------------------------------
@@ -352,6 +362,132 @@ def gather_competitor_pages(keyword: str, settings: Settings) -> list[dict]:
     except Exception as exc:
         logger.warning("競合分析でエラー（無視して続行）: %s", exc)
         return []
+
+
+# -----------------------------------------------------------------------------
+# アフィリエイト案件（提携クリニック）— 読込・選定・リンク注入
+# -----------------------------------------------------------------------------
+# 方針: LLM には URL を一切書かせず、本文には目印（プレースホルダ）だけ置かせる。
+# 実際のアフィリエイトリンクはコードがデータから正確に組み立てて注入する
+# （URL 捏造の防止と、rel="sponsored nofollow" 等の規約準拠を担保するため）。
+
+CLINICS_TABLE_MARKER = "{{CLINICS_TABLE}}"
+
+
+def load_clinics(path: str) -> list[dict]:
+    """提携クリニック一覧を JSON から読む。無ければ空リスト＝機能オフ（安全縮退）。"""
+    if not path or not os.path.exists(path):
+        return []
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception as exc:
+        logger.warning("clinics ファイルの読込に失敗（アフィリ注入を無効化）: %s", exc)
+        return []
+    raw = data.get("clinics", data) if isinstance(data, dict) else data
+    clinics = [c for c in raw if isinstance(c, dict) and c.get("name") and c.get("url")]
+    if clinics:
+        logger.info("提携クリニックを %d 件読み込みました", len(clinics))
+    return clinics
+
+
+def select_clinics(keyword: str, clinics: list[dict], max_n: int = 5) -> list[dict]:
+    """キーワードに合うクリニックを選ぶ（施術種別・対応地域でスコアリング）。"""
+    if not clinics:
+        return []
+    kw = keyword.lower()
+    wants_lasik = ("レーシック" in keyword) or ("lasik" in kw)
+    wants_icl = ("icl" in kw) or ("眼内レンズ" in keyword)
+    scored: list[tuple[int, dict]] = []
+    for c in clinics:
+        types = " ".join(c.get("types", [])).lower()
+        score = 0
+        if wants_lasik and ("レーシック" in types or "lasik" in types):
+            score += 2
+        if wants_icl and "icl" in types:
+            score += 2
+        for region in c.get("regions", []):
+            if region and region.lower() in kw:
+                score += 3
+        scored.append((score, c))
+    # 施術種別の指定がある場合は、該当クリニックを優先（無ければ全件）。
+    if wants_lasik or wants_icl:
+        matched = [(s, c) for s, c in scored if s > 0]
+        scored = matched or scored
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [c for _, c in scored[:max_n]]
+
+
+def _clinic_link(clinic: dict, label: str) -> str:
+    """案件リンクを生成する。URL はデータ由来のみ。rel に sponsored/nofollow を付与。"""
+    url = html.escape(clinic.get("url", ""), quote=True)
+    return (
+        f'<a href="{url}" target="_blank" '
+        f'rel="sponsored nofollow noopener">{html.escape(label)}</a>'
+    )
+
+
+def render_clinics_table(clinics: list[dict]) -> str:
+    """提携クリニックの比較表 HTML を組み立てる（各行に公式サイトへの案件リンク）。"""
+    if not clinics:
+        return ""
+    rows = []
+    for c in clinics:
+        name = html.escape(c.get("name", ""))
+        types = html.escape("・".join(c.get("types", [])))
+        catch = html.escape(c.get("catch", ""))
+        cta = _clinic_link(c, "公式サイト")
+        rows.append(
+            f"<tr><td><strong>{name}</strong></td><td>{types}</td>"
+            f"<td>{catch}</td><td>{cta}</td></tr>"
+        )
+    # 医療広告ガイドラインに配慮し、費用を強調する列は置かず「対応施術・特徴」で比較する。
+    return (
+        '<figure class="wp-block-table clinic-compare"><table>'
+        "<thead><tr><th>クリニック</th><th>対応施術</th><th>特徴</th><th>公式</th></tr></thead>"
+        "<tbody>" + "".join(rows) + "</tbody></table></figure>"
+    )
+
+
+def _append_clinics_block(body_html: str, table: str) -> str:
+    """目印が無い場合のフォールバック：比較表を「まとめ/FAQ」の前、無ければ末尾に挿入。"""
+    block = "<h2>おすすめクリニック比較</h2>" + table
+    m = re.search(r"<h2[^>]*>[^<]*(まとめ|よくある|FAQ|Q&A)", body_html)
+    if m:
+        return body_html[: m.start()] + block + body_html[m.start():]
+    return body_html + block
+
+
+def inject_clinics(body_html: str, clinics: list[dict]) -> str:
+    """本文中の目印を、実際の案件リンク（比較表・CTA）に置換する。"""
+    if not clinics:
+        return body_html
+    table = render_clinics_table(clinics)
+    if CLINICS_TABLE_MARKER in body_html:
+        body_html = body_html.replace(CLINICS_TABLE_MARKER, table, 1)
+    else:
+        body_html = _append_clinics_block(body_html, table)
+
+    def _cta(match: "re.Match") -> str:
+        name = match.group(1).strip()
+        clinic = next((x for x in clinics if x.get("name") == name), None)
+        if clinic is None:  # 完全一致しなければ部分一致で救済
+            clinic = next((x for x in clinics if name and name in x.get("name", "")), None)
+        if clinic is None:
+            return ""
+        label = f"▶ {clinic.get('name')}の無料カウンセリングはこちら"
+        return '<p class="clinic-cta">' + _clinic_link(clinic, label) + "</p>"
+
+    body_html = re.sub(r"\{\{CTA:([^}]+)\}\}", _cta, body_html)
+    # 捏造リンク防止のため、残った {{...}} 目印はすべて除去する。
+    body_html = re.sub(r"\{\{[^}]*\}\}", "", body_html)
+    # 医療広告/ASP 規約: 「広告と分かる表示」を冒頭に必ず付与する（コードで担保）。
+    disclosure = (
+        '<p class="ad-disclosure"><small>※本記事はアフィリエイト広告（PR）を含みます。'
+        "掲載情報は執筆時点のものです。施術の適応・料金・リスクは各クリニックの公式サイトで"
+        "必ずご確認ください。</small></p>"
+    )
+    return disclosure + body_html
 
 
 # -----------------------------------------------------------------------------
@@ -630,6 +766,16 @@ class SEOAgent:
     def write(self, draft: Draft) -> None:
         """[作成] 構成に沿って HTML 本文を生成する。"""
         logger.info("[作成] title=%s", draft.title)
+        # この記事で紹介する提携クリニックを選定（案件が無ければ空＝従来動作）。
+        draft.clinics = select_clinics(
+            draft.keyword, self.settings.clinics, self.settings.clinics_per_article
+        )
+        if draft.clinics:
+            logger.info(
+                "[作成] 紹介クリニック %d 件: %s",
+                len(draft.clinics),
+                "、".join(c.get("name", "") for c in draft.clinics),
+            )
         system = (
             "あなたは読みやすさを最優先する日本語 Web ライターです。"
             "スマホ閲覧を意識し、1 段落を短く保ち、箇条書き（<ul>/<ol>）や"
@@ -639,6 +785,18 @@ class SEOAgent:
             "アフィリエイトリンクを自然に挿入できる文脈（おすすめ提示・比較・CTA）を"
             "意識的に作りつつ、実在しない事実は書かないこと。"
         )
+        if draft.clinics:
+            system += (
+                " 提携クリニックの紹介を必ず含めます。ただしリンク（URL）や <a> タグは"
+                "自分で書かず、指定された目印（プレースホルダ）だけを置くこと。"
+                " この記事は医療（自由診療）のアフィリエイト記事です。医療広告ガイドラインを順守し、"
+                "次を厳守すること: (1) 患者の体験談・口コミ・感想を創作しない。"
+                "(2)『No.1』『日本一』『最高』『必ず治る』等の最上級・優良誤認・効果保証の表現を使わない。"
+                "(3) ビフォーアフターや誇大・虚偽の表現を使わない。(4) 費用を過度に煽らない。"
+                "(5) 効果には個人差がある前提で断定を避け、リスクや自由診療である旨にも触れる。"
+                "(6) 各クリニック公式サイトの文章・体験談をそのまま転載しない。"
+                " PR（広告）である旨の明記は冒頭にコードが付与するので、本文では繰り返さないこと。"
+            )
         user = (
             f"狙うキーワード: 「{draft.keyword}」\n"
             f"タイトル: {draft.title}\n\n"
@@ -647,6 +805,27 @@ class SEOAgent:
             "上記に忠実に、本文 HTML を出力してください。導入文・各 H2 セクション・"
             "まとめ（CTA を含む）まで一気通貫で書いてください。"
         )
+        if draft.clinics:
+            lines = ["=== 紹介する提携クリニック（アフィリエイト送客）==="]
+            for i, c in enumerate(draft.clinics, 1):
+                pts = "・".join(c.get("points", []))
+                line = f"{i}. {c['name']}｜{c.get('catch', '')}"
+                if c.get("price"):
+                    line += f"｜料金: {c['price']}"
+                if pts:
+                    line += f"｜推し: {pts}"
+                lines.append(line)
+            user += (
+                "\n" + "\n".join(lines) + "\n\n"
+                "【アフィリエイト挿入ルール（厳守）】\n"
+                "- 「おすすめクリニック比較」等の H2 セクションを設け、その中に必ず "
+                f"{CLINICS_TABLE_MARKER} を 1 回だけ単独で置くこと（コードが比較表に置換します）。\n"
+                "- 各クリニックを本文で名前を挙げて具体的に紹介し、その紹介の直後に "
+                "{{CTA:正式名}} を置くこと（コードが申込ボタンに置換します）。"
+                "正式名は上記リストの名称と完全一致させること。\n"
+                "- URL・href・<a> タグは絶対に自分で書かないこと（リンクはコードが付与します）。\n"
+                "- 料金や実績などの事実は上記データの範囲で書き、誇大表現・断定を避けること。\n"
+            )
         if draft.feedback:
             user += (
                 "\n前回の監査の改善点を本文へ反映してください:\n"
@@ -667,6 +846,7 @@ class SEOAgent:
             "冗長な言い回し・不自然な敬語を修正し、読みやすさを高めます。"
             "HTML タグ構造は維持し、本文 HTML 断片のみを返してください。"
             "Markdown コードフェンス（```）は使わないこと。"
+            " {{...}} 形式の目印（プレースホルダ）は変更・削除せず、そのままの位置に残すこと。"
         )
         user = (
             "次の HTML を校正して、修正後の HTML 断片だけを返してください。\n\n"
@@ -676,6 +856,19 @@ class SEOAgent:
             self._complete(system, user, max_tokens=16000, stream=True)
         )
         logger.info("[校正] 完了（%d 文字）", len(draft.body_html))
+
+    def inject_affiliates(self, draft: Draft) -> None:
+        """[案件注入] 本文中の目印を、実際の提携クリニックのリンク（比較表・CTA）に置換する。"""
+        if not draft.clinics:
+            return
+        before = len(draft.body_html)
+        draft.body_html = inject_clinics(draft.body_html, draft.clinics)
+        logger.info(
+            "[案件注入] クリニック %d 件のリンクを反映（%d→%d 文字）",
+            len(draft.clinics),
+            before,
+            len(draft.body_html),
+        )
 
     def audit(self, draft: Draft) -> AuditResult:
         """[監査] Structured Outputs で SEO 品質を厳格採点する。"""
@@ -692,6 +885,13 @@ class SEOAgent:
             "改善点を具体的に列挙すること。必須テーマの取りこぼしは重大な欠陥として"
             "減点し、不足テーマ名を improvements に明記すること。"
         )
+        if draft.clinics:
+            system += (
+                " なお本記事は医療（自由診療）のアフィリエイト記事である。医療広告ガイドライン上、"
+                "患者の体験談・口コミ、『No.1/最高/必ず治る』等の優良誤認・効果保証、"
+                "ビフォーアフターは禁止である。これらが含まれていれば重大な欠陥として減点すること。"
+                "逆に、改善提案（improvements）として体験談の追加や最上級表現の使用を勧めてはならない。"
+            )
         must_cover_block = ""
         if draft.must_cover:
             must_cover_block = (
@@ -699,11 +899,21 @@ class SEOAgent:
                 + "\n".join(f"- {t}" for t in draft.must_cover)
                 + "\n各テーマが本文で実質的に扱われているか確認すること。\n"
             )
+        affiliate_block = ""
+        if draft.clinics:
+            names = "、".join(c.get("name", "") for c in draft.clinics)
+            affiliate_block = (
+                "\n=== アフィリエイト要件（送客サイト）===\n"
+                f"この記事は提携クリニック（{names}）への送客が目的。"
+                "比較表・各クリニックの紹介・申込導線（CTA リンク）が本文に含まれているか確認し、"
+                "欠けていれば重大な欠陥として減点し改善点に明記すること。\n"
+            )
         user = (
             f"狙うキーワード: 「{draft.keyword}」\n"
             f"タイトル: {draft.title}\n"
             f"合格ライン: score >= {self.settings.pass_score} かつ 重大な欠陥なし\n"
-            f"{must_cover_block}\n"
+            f"{must_cover_block}"
+            f"{affiliate_block}\n"
             "=== 本文 HTML ===\n"
             f"{draft.body_html}\n\n"
             "上記を採点し、pass / score / reason / improvements を返してください。"
@@ -776,6 +986,7 @@ class SEOAgent:
             self.build_outline(draft)
             self.write(draft)
             self.proofread(draft)
+            self.inject_affiliates(draft)
             result = self.audit(draft)
 
             if result.pass_ and result.score >= self.settings.pass_score:
