@@ -1,0 +1,17 @@
+# WordPress SEO エージェント — 依存ライブラリ
+#
+# Python 3.10+ を想定しています。
+#   python -m venv .venv && source .venv/bin/activate
+#   pip install -r requirements.txt
+
+# Anthropic 公式 SDK（Claude を呼び出す唯一の経路）
+anthropic>=0.69.0
+
+# 監査フェーズの Structured Outputs（messages.parse + Pydantic）に使用
+pydantic>=2.7.0
+
+# .env からの設定読み込み
+python-dotenv>=1.0.1
+
+# WordPress REST API への HTTP リクエスト
+requests>=2.32.0
