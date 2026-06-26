@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# 環境変数（機密情報）
+.env
+
+# SEOエージェント出力ファイル
+seo_agent/seo_output*.html
+seo_agent/seo_agent.log
+
+# OS
+.DS_Store
+Thumbs.db
