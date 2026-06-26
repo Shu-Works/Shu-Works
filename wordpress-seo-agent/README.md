@@ -43,8 +43,16 @@ python main.py "ふるさと納税 おすすめ 食品" --dry-run
 
 終了コード: `0`=合格して投稿 / `2`=規定回数で不合格 / `1`=実行エラー。
 
-## 拡張ポイント
+## 競合分析（任意）
 
-`fetch_competitor_insights()` は競合（上位ページ）分析の差し込み口です。
-Google Custom Search / SerpAPI 等を実装すれば、上位記事の構成を踏まえた
-より精度の高い構成設計に拡張できます（現状は未連携で LLM 内部知識のみ）。
+`CompetitorAnalyzer` が検索上位ページの構成（タイトル・H2見出し・H3数・概算文字量）を
+要約し、[分析]フェーズに取り込みます。検索プロバイダは **SerpAPI** または
+**Google Custom Search** を、`.env` にキーがある方を自動採用します。
+
+- `SEO_SEARCH_PROVIDER`（`auto`/`serpapi`/`google_cse`/`none`）
+- `SERPAPI_API_KEY` または `GOOGLE_CSE_API_KEY` + `GOOGLE_CSE_ID`
+- `SEO_COMPETITOR_TOP_N`（解析する上位件数、既定 5）
+
+**どちらのキーも未設定なら競合分析は自動でスキップ**され、LLM の内部知識のみで
+構成を設計します（従来動作）。個々のページ取得に失敗してもパイプラインは止まりません。
+取得結果は「模倣」ではなく**差別化の材料**として分析に渡しています。

@@ -13,5 +13,8 @@ pydantic>=2.7.0
 # .env からの設定読み込み
 python-dotenv>=1.0.1
 
-# WordPress REST API への HTTP リクエスト
+# WordPress REST API・検索 API・競合ページ取得の HTTP リクエスト
 requests>=2.32.0
+
+# 競合ページの HTML から見出し構成を抽出（競合分析）
+beautifulsoup4>=4.12.0

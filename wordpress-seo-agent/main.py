@@ -68,6 +68,13 @@ class Settings:
     default_categories: list[str] = field(default_factory=list)
     default_tags: list[str] = field(default_factory=list)
 
+    # 競合分析（検索プロバイダ）。キー未設定なら自動的に無効化される。
+    search_provider: str = "auto"  # auto | serpapi | google_cse | none
+    serpapi_api_key: str = ""
+    google_cse_api_key: str = ""
+    google_cse_id: str = ""
+    competitor_top_n: int = 5
+
     @classmethod
     def from_env(cls) -> "Settings":
         """`.env` を読み込み、必須項目を検証して Settings を返す。"""
@@ -96,6 +103,11 @@ class Settings:
             wordpress_app_password=wp_pass,
             default_categories=_split("WORDPRESS_DEFAULT_CATEGORIES"),
             default_tags=_split("WORDPRESS_DEFAULT_TAGS"),
+            search_provider=(os.getenv("SEO_SEARCH_PROVIDER", "auto").strip() or "auto"),
+            serpapi_api_key=os.getenv("SERPAPI_API_KEY", "").strip(),
+            google_cse_api_key=os.getenv("GOOGLE_CSE_API_KEY", "").strip(),
+            google_cse_id=os.getenv("GOOGLE_CSE_ID", "").strip(),
+            competitor_top_n=int(os.getenv("SEO_COMPETITOR_TOP_N", "5") or "5"),
         )
         logger.info(
             "設定読み込み完了 model=%s pass_score=%s max_loops=%s wp=%s",
@@ -160,24 +172,157 @@ class Draft:
 
 
 # -----------------------------------------------------------------------------
-# 競合分析（将来の API 連携用に独立。現状はプレースホルダ）
+# 競合分析（検索上位ページの構成を要約）
 # -----------------------------------------------------------------------------
-def fetch_competitor_insights(keyword: str) -> str:
+class CompetitorAnalyzer:
     """
-    競合（検索上位ページ）の傾向を返す拡張ポイント。
+    検索上位ページの構成（タイトル・H2/H3・概算文字量）を要約して返す。
 
-    将来的には検索 API（Google Custom Search / SerpAPI 等）やスクレイピングを
-    ここに実装し、上位記事の見出し構成・文字数・カバー範囲を要約して返す。
-    現状は未連携のため空文字を返し、LLM の内部知識のみで構成を設計する。
+    検索プロバイダは SerpAPI または Google Custom Search を、設定済みの方を
+    自動採用する。どちらのキーも無ければ無効化され、空文字を返す
+    （この場合パイプラインは LLM の内部知識のみで構成を設計する）。
+
+    HTML の取得・解析は best-effort で、個々のページで失敗しても全体は止めない。
+    過度な負荷をかけないため取得は上位 N 件のみ・タイムアウト付きで行う。
+    """
+
+    _UA = (
+        "Mozilla/5.0 (compatible; SEOAgentBot/1.0; +https://example.com/bot)"
+    )
+
+    def __init__(self, settings: Settings, timeout: int = 15) -> None:
+        self.settings = settings
+        self.timeout = timeout
+        self.session = requests.Session()
+        self.session.headers.update({"User-Agent": self._UA})
+
+    def _provider(self) -> str:
+        """有効な検索プロバイダ名を決定する（auto は設定済みキーから判定）。"""
+        provider = self.settings.search_provider
+        if provider == "serpapi":
+            return "serpapi" if self.settings.serpapi_api_key else "none"
+        if provider == "google_cse":
+            return "google_cse" if (
+                self.settings.google_cse_api_key and self.settings.google_cse_id
+            ) else "none"
+        if provider == "none":
+            return "none"
+        # auto: 使えるものを優先採用
+        if self.settings.serpapi_api_key:
+            return "serpapi"
+        if self.settings.google_cse_api_key and self.settings.google_cse_id:
+            return "google_cse"
+        return "none"
+
+    def _search_urls(self, keyword: str) -> list[str]:
+        """検索プロバイダ経由で上位の自然検索 URL を取得する。"""
+        provider = self._provider()
+        try:
+            if provider == "serpapi":
+                resp = self.session.get(
+                    "https://serpapi.com/search.json",
+                    params={
+                        "engine": "google",
+                        "q": keyword,
+                        "hl": "ja",
+                        "gl": "jp",
+                        "num": 10,
+                        "api_key": self.settings.serpapi_api_key,
+                    },
+                    timeout=self.timeout,
+                )
+                resp.raise_for_status()
+                items = resp.json().get("organic_results", [])
+                return [it["link"] for it in items if it.get("link")]
+            if provider == "google_cse":
+                resp = self.session.get(
+                    "https://www.googleapis.com/customsearch/v1",
+                    params={
+                        "key": self.settings.google_cse_api_key,
+                        "cx": self.settings.google_cse_id,
+                        "q": keyword,
+                        "hl": "ja",
+                        "gl": "jp",
+                        "num": 10,
+                    },
+                    timeout=self.timeout,
+                )
+                resp.raise_for_status()
+                items = resp.json().get("items", [])
+                return [it["link"] for it in items if it.get("link")]
+        except requests.RequestException as exc:
+            logger.warning("検索プロバイダ呼び出しに失敗: %s", exc)
+        return []
+
+    def _page_structure(self, url: str) -> Optional[dict]:
+        """1 ページの構成（title / H2 / H3数 / 概算文字量）を抽出する。"""
+        from bs4 import BeautifulSoup  # 遅延 import（未インストールでも無効化で済む）
+
+        try:
+            resp = self.session.get(url, timeout=self.timeout)
+            resp.raise_for_status()
+        except requests.RequestException as exc:
+            logger.debug("ページ取得失敗 %s: %s", url, exc)
+            return None
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+        for tag in soup(["script", "style", "noscript"]):
+            tag.decompose()
+        title = soup.title.get_text(strip=True) if soup.title else url
+        h2 = [h.get_text(strip=True) for h in soup.find_all("h2") if h.get_text(strip=True)]
+        h3_count = len(soup.find_all("h3"))
+        text_len = len(soup.get_text(separator=" ", strip=True))
+        return {
+            "url": url,
+            "title": title,
+            "h2": h2[:8],
+            "h3_count": h3_count,
+            "text_len": text_len,
+        }
+
+    def insights(self, keyword: str) -> str:
+        """上位ページの構成傾向を要約したテキストを返す（無効時は空文字）。"""
+        provider = self._provider()
+        if provider == "none":
+            logger.info("競合分析: 検索プロバイダ未設定のためスキップ（内部知識で代替）")
+            return ""
+
+        urls = self._search_urls(keyword)[: self.settings.competitor_top_n]
+        if not urls:
+            logger.info("競合分析: 上位 URL を取得できませんでした")
+            return ""
+
+        logger.info("競合分析: %s 経由で上位 %d 件を解析", provider, len(urls))
+        lines: list[str] = ["上位検索結果の構成傾向（参考。模倣ではなく差別化の材料）:"]
+        for i, url in enumerate(urls, 1):
+            info = self._page_structure(url)
+            if not info:
+                continue
+            h2_sample = " ｜ ".join(info["h2"][:5]) or "（H2なし）"
+            lines.append(
+                f"{i}. {info['title']}\n"
+                f"   H2例: {h2_sample}\n"
+                f"   H3数: {info['h3_count']} / 概算本文量: 約{info['text_len']}文字"
+            )
+        return "\n".join(lines) if len(lines) > 1 else ""
+
+
+def fetch_competitor_insights(keyword: str, settings: Settings) -> str:
+    """
+    競合（検索上位ページ）の傾向を要約して返す（analyze から呼ばれる薄いラッパ）。
 
     Args:
         keyword: 狙う検索キーワード。
+        settings: 検索プロバイダ設定を含む実行設定。
 
     Returns:
-        競合傾向の要約テキスト（未連携時は空文字）。
+        競合傾向の要約テキスト（無効・取得失敗時は空文字）。
     """
-    logger.debug("競合分析は未連携です（拡張ポイント）: keyword=%s", keyword)
-    return ""
+    try:
+        return CompetitorAnalyzer(settings).insights(keyword)
+    except Exception as exc:  # 競合分析の失敗で本処理を止めない
+        logger.warning("競合分析でエラー（無視して続行）: %s", exc)
+        return ""
 
 
 # -----------------------------------------------------------------------------
@@ -319,7 +464,7 @@ class SEOAgent:
     def analyze(self, draft: Draft) -> None:
         """[分析] 検索意図（潜在・顕在ニーズ）と E-E-A-T 方針を分析する。"""
         logger.info("[分析] keyword=%s", draft.keyword)
-        competitor = fetch_competitor_insights(draft.keyword)
+        competitor = fetch_competitor_insights(draft.keyword, self.settings)
 
         system = (
             "あなたは E-E-A-T を重視する日本語 SEO のシニアストラテジストです。"
