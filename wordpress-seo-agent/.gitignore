@@ -1,5 +1,6 @@
 .env
 clinics.json
+section_images.json
 .venv/
 __pycache__/
 *.pyc

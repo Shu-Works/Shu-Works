@@ -86,6 +86,9 @@ class Settings:
     clinics: list[dict] = field(default_factory=list)
     clinics_per_article: int = 5
 
+    # 全記事で使い回す固定セクション画像（まとめ/FAQ/比較など）: {見出しキーワード: 画像URL}
+    section_images: dict = field(default_factory=dict)
+
     # 画像生成（OpenAI）。キーが無ければ無効＝文字記事のまま（安全縮退）。
     openai_api_key: str = ""
     image_enabled: bool = True
@@ -136,6 +139,8 @@ class Settings:
             competitor_top_n=int(os.getenv("SEO_COMPETITOR_TOP_N", "5") or "5"),
             clinics=load_clinics(os.getenv("CLINICS_FILE", "clinics.json").strip() or "clinics.json"),
             clinics_per_article=int(os.getenv("CLINICS_PER_ARTICLE", "5") or "5"),
+            section_images=load_section_images(
+                os.getenv("SECTION_IMAGES_FILE", "section_images.json").strip() or "section_images.json"),
             openai_api_key=os.getenv("OPENAI_API_KEY", "").strip(),
             image_enabled=(os.getenv("IMAGE_GEN", "true").strip().lower() not in ("0", "false", "no", "off")),
             image_model=os.getenv("IMAGE_MODEL", "gpt-image-2").strip() or "gpt-image-2",
@@ -460,6 +465,23 @@ def load_clinics(path: str) -> list[dict]:
     return clinics
 
 
+def load_section_images(path: str) -> dict:
+    """全記事で使い回す固定セクション画像 {見出しキーワード: URL} を読む。無ければ空。"""
+    if not path or not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        sections = data.get("sections", data) if isinstance(data, dict) else {}
+        out = {k: v for k, v in sections.items() if isinstance(v, str) and v.strip()}
+        if out:
+            logger.info("固定セクション画像を %d 件読み込みました", len(out))
+        return out
+    except Exception as exc:
+        logger.warning("section_images の読込に失敗（固定画像なしで続行）: %s", exc)
+        return {}
+
+
 def select_clinics(keyword: str, clinics: list[dict], max_n: int = 5) -> list[dict]:
     """キーワードに合うクリニックを選ぶ（施術種別・対応地域でスコアリング）。"""
     if not clinics:
@@ -488,11 +510,31 @@ def select_clinics(keyword: str, clinics: list[dict], max_n: int = 5) -> list[di
 
 
 def _clinic_link(clinic: dict, label: str) -> str:
-    """案件リンクを生成する。URL はデータ由来のみ。rel に sponsored/nofollow を付与。"""
+    """案件リンク（テキスト）。URL はデータ由来のみ。rel に sponsored/nofollow を付与。"""
     url = html.escape(clinic.get("url", ""), quote=True)
     return (
         f'<a href="{url}" target="_blank" '
         f'rel="sponsored nofollow noopener">{html.escape(label)}</a>'
+    )
+
+
+def _cta_button(clinic: dict, label: str, big: bool = True) -> str:
+    """目立つ CTA ボタン（インラインスタイルでテーマ非依存・緑の申込ボタン）。"""
+    url = html.escape(clinic.get("url", ""), quote=True)
+    if big:
+        style = (
+            "display:block;max-width:520px;margin:24px auto;padding:16px 20px;"
+            "background:#27ae60;color:#ffffff;font-weight:bold;font-size:18px;line-height:1.5;"
+            "text-align:center;text-decoration:none;border-radius:10px;box-shadow:0 4px 0 #1e8e4f;"
+        )
+    else:
+        style = (
+            "display:inline-block;padding:9px 14px;background:#27ae60;color:#ffffff;"
+            "font-weight:bold;font-size:14px;text-decoration:none;border-radius:6px;white-space:nowrap;"
+        )
+    return (
+        f'<a href="{url}" target="_blank" rel="sponsored nofollow noopener" '
+        f'style="{style}">{html.escape(label)} &raquo;</a>'
     )
 
 
@@ -505,7 +547,7 @@ def render_clinics_table(clinics: list[dict]) -> str:
         name = html.escape(c.get("name", ""))
         types = html.escape("・".join(c.get("types", [])))
         catch = html.escape(c.get("catch", ""))
-        cta = _clinic_link(c, "公式サイト")
+        cta = _cta_button(c, "公式", big=False)
         rows.append(
             f"<tr><td><strong>{name}</strong></td><td>{types}</td>"
             f"<td>{catch}</td><td>{cta}</td></tr>"
@@ -544,8 +586,8 @@ def inject_clinics(body_html: str, clinics: list[dict]) -> str:
             clinic = next((x for x in clinics if name and name in x.get("name", "")), None)
         if clinic is None:
             return ""
-        label = f"▶ {clinic.get('name')}の無料カウンセリングはこちら"
-        return '<p class="clinic-cta">' + _clinic_link(clinic, label) + "</p>"
+        label = f"{clinic.get('name')}の無料カウンセリングはこちら"
+        return _cta_button(clinic, label, big=True)
 
     body_html = re.sub(r"\{\{CTA:([^}]+)\}\}", _cta, body_html)
     # 捏造リンク防止のため、残った {{...}} 目印はすべて除去する。
@@ -1186,8 +1228,27 @@ class SEOAgent:
         logger.warning("[画像監査] 規定回数で合格せず最後の画像を採用: %s", spec.alt[:24])
         return last_bytes
 
+    def _insert_fixed_section_images(self, draft: Draft) -> set:
+        """まとめ/FAQ/比較 等の見出し直下に、全記事共通の固定画像を挿入する（API不要）。"""
+        covered: set = set()
+        for kw, url in (self.settings.section_images or {}).items():
+            for m in re.finditer(r"<h2[^>]*>(.*?)</h2>", draft.body_html, re.S):
+                inner = re.sub(r"<[^>]+>", "", m.group(1))
+                if kw in inner and inner not in covered:
+                    fig = (
+                        '<figure class="wp-block-image size-large">'
+                        f'<img src="{html.escape(url, quote=True)}" alt="{html.escape(inner)}" loading="lazy" />'
+                        "</figure>"
+                    )
+                    draft.body_html = draft.body_html[: m.end()] + fig + draft.body_html[m.end():]
+                    covered.add(inner)
+                    logger.info("[画像] 固定セクション画像を挿入: %s", inner[:24])
+                    break
+        return covered
+
     def illustrate(self, draft: Draft, wp: "WordPressClient") -> None:
         """[画像] 図解を生成・監査し、アイキャッチ設定＋本文へ挿絵を挿入する（best-effort）。"""
+        covered = self._insert_fixed_section_images(draft)  # 固定セクション画像（API不要・常時）
         if not (self.settings.image_enabled and self.settings.openai_api_key):
             return
         logger.info("[画像] 画像プランを作成します（model=%s）", self.settings.image_model)
@@ -1202,6 +1263,12 @@ class SEOAgent:
         first_media_id: Optional[int] = None
         for i, spec in enumerate(specs):
             featured = spec.role == "featured"
+            # 固定画像で既にカバーした見出しには動的画像を入れない（重複回避）。
+            if not featured and spec.after_heading and any(
+                spec.after_heading.strip()[:8] in c or c[:8] in spec.after_heading.strip()
+                for c in covered
+            ):
+                continue
             # サムネ（featured）の alt には狙うキーワードを必ず含める（SEO）。
             if featured and draft.keyword and draft.keyword not in spec.alt:
                 spec.alt = f"{draft.keyword}｜{spec.alt}" if spec.alt else draft.keyword
