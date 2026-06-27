@@ -569,8 +569,56 @@ def _append_clinics_block(body_html: str, table: str) -> str:
     return body_html + block
 
 
+def render_clinic_card(clinic: dict) -> str:
+    """クリニックの基本情報カード（公式スクショ＋基本情報テーブル＋地図＋申込ボタン）を組み立てる。"""
+    import urllib.parse
+
+    name = html.escape(clinic.get("name", ""))
+    th = "padding:8px 10px;background:#eef4fb;font-weight:bold;text-align:left;white-space:nowrap;border:1px solid #dbe6f3;vertical-align:top;width:34%;"
+    td = "padding:8px 10px;border:1px solid #dbe6f3;vertical-align:top;"
+    rows: list[str] = []
+
+    def row(label: str, value_html: str) -> None:
+        if value_html:
+            rows.append(f'<tr><th style="{th}">{html.escape(label)}</th><td style="{td}">{value_html}</td></tr>')
+
+    def ul(items: list) -> str:
+        lis = "".join(f"<li>{html.escape(str(x))}</li>" for x in items if x)
+        return f'<ul style="margin:0;padding-left:1.2em;">{lis}</ul>' if lis else ""
+
+    row("総合評価", html.escape(clinic.get("rating", "")))
+    row("口コミ評価", html.escape(clinic.get("review_rating", "")))
+    row("金額（税込）", ul(clinic.get("prices", [])))
+    row("支払方法", ul(clinic.get("payment", [])))
+    row("電話番号", html.escape(clinic.get("phone", "")))
+    row("住所", html.escape(clinic.get("address", "")))
+    row("アクセス", html.escape(clinic.get("access", "")))
+    row("受付時間", html.escape(clinic.get("hours", "")))
+    row("定休日", html.escape(clinic.get("holiday", "")))
+
+    map_q = clinic.get("map_query") or clinic.get("address", "")
+    if map_q:
+        src = "https://maps.google.com/maps?q=" + urllib.parse.quote(map_q) + "&output=embed"
+        row("地図", f'<iframe src="{html.escape(src, quote=True)}" width="100%" height="240" style="border:0;" loading="lazy"></iframe>')
+
+    shot = clinic.get("screenshot_url", "")
+    shot_html = (
+        f'<figure class="wp-block-image" style="margin:0 0 14px;">'
+        f'<img src="{html.escape(shot, quote=True)}" alt="{name}の公式サイト" loading="lazy" '
+        f'style="width:100%;border:1px solid #eee;border-radius:6px;" /></figure>'
+        if shot else ""
+    )
+    table = f'<table style="width:100%;border-collapse:collapse;margin:0 0 14px;">{"".join(rows)}</table>'
+    button = _cta_button(clinic, f"{clinic.get('name', '')}の公式サイトはこちら", big=True)
+    return (
+        '<div class="clinic-card" style="border:1px solid #e2e8f0;border-radius:12px;'
+        'padding:16px;margin:24px 0;background:#fafcff;">'
+        f"{shot_html}{table}{button}</div>"
+    )
+
+
 def inject_clinics(body_html: str, clinics: list[dict]) -> str:
-    """本文中の目印を、実際の案件リンク（比較表・CTA）に置換する。"""
+    """本文中の目印を、実際の案件リンク（基本情報カード・比較表・CTA）に置換する。"""
     if not clinics:
         return body_html
     table = render_clinics_table(clinics)
@@ -578,6 +626,15 @@ def inject_clinics(body_html: str, clinics: list[dict]) -> str:
         body_html = body_html.replace(CLINICS_TABLE_MARKER, table, 1)
     else:
         body_html = _append_clinics_block(body_html, table)
+
+    def _card(match: "re.Match") -> str:
+        nm = match.group(1).strip()
+        c = next((x for x in clinics if x.get("name") == nm), None)
+        if c is None:
+            c = next((x for x in clinics if nm and nm in x.get("name", "")), None)
+        return render_clinic_card(c) if c else ""
+
+    body_html = re.sub(r"\{\{CLINIC:([^}]+)\}\}", _card, body_html)
 
     def _cta(match: "re.Match") -> str:
         name = match.group(1).strip()
@@ -1000,13 +1057,15 @@ class SEOAgent:
             user += (
                 "\n" + "\n".join(lines) + "\n\n"
                 "【アフィリエイト挿入ルール（厳守）】\n"
-                "- 「おすすめクリニック比較」等の H2 セクションを設け、その中に必ず "
-                f"{CLINICS_TABLE_MARKER} を 1 回だけ単独で置くこと（コードが比較表に置換します）。\n"
-                "- 各クリニックを本文で名前を挙げて具体的に紹介し、その紹介の直後に "
-                "{{CTA:正式名}} を置くこと（コードが申込ボタンに置換します）。"
+                "- 「おすすめクリニック比較」という H2 セクションを設け、その先頭に必ず "
+                f"{CLINICS_TABLE_MARKER} を 1 回だけ単独で置く（コードが比較表に置換）。\n"
+                "- 続けて各クリニックを H3 見出し（クリニック名）＋短い紹介文で順に取り上げ、"
+                "各クリニックの紹介文の直後に {{CLINIC:正式名}} を単独で置く"
+                "（コードが公式サイトのスクショ・基本情報表・地図・申込ボタン入りの詳細カードに置換します）。"
                 "正式名は上記リストの名称と完全一致させること。\n"
-                "- URL・href・<a> タグは絶対に自分で書かないこと（リンクはコードが付与します）。\n"
-                "- 料金や実績などの事実は上記データの範囲で書き、誇大表現・断定を避けること。\n"
+                "- 紹介文は料金・特徴をデータの範囲で簡潔に。基本情報の詳細はカードが表示するので本文で重複させない。\n"
+                "- URL・href・<a> タグ・電話番号リンクは自分で書かない（コードが付与します）。\n"
+                "- 誇大表現・断定・体験談は使わない。\n"
             )
         if draft.feedback:
             user += (
