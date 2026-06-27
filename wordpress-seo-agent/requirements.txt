@@ -18,3 +18,6 @@ requests>=2.32.0
 
 # 競合ページの HTML から見出し構成を抽出（競合分析）
 beautifulsoup4>=4.12.0
+
+# 画像生成（gpt-image-1）。OPENAI_API_KEY 未設定なら未使用でも問題なし
+openai>=1.70.0

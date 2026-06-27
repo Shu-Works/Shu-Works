@@ -27,6 +27,7 @@ Structured Outputs（messages.parse + Pydantic）で必ずパース可能な JSO
 from __future__ import annotations
 
 import argparse
+import base64
 import html
 import json
 import logging
@@ -81,6 +82,16 @@ class Settings:
     clinics: list[dict] = field(default_factory=list)
     clinics_per_article: int = 5
 
+    # 画像生成（OpenAI）。キーが無ければ無効＝文字記事のまま（安全縮退）。
+    openai_api_key: str = ""
+    image_enabled: bool = True
+    image_model: str = "gpt-image-2"
+    image_quality: str = "medium"
+    image_section_max: int = 3
+    # イラスト監査（Claude vision で文字化け・内容・コンプラを検査して再生成）
+    image_audit_enabled: bool = True
+    image_audit_retries: int = 2
+
     @classmethod
     def from_env(cls) -> "Settings":
         """`.env` を読み込み、必須項目を検証して Settings を返す。"""
@@ -116,6 +127,13 @@ class Settings:
             competitor_top_n=int(os.getenv("SEO_COMPETITOR_TOP_N", "5") or "5"),
             clinics=load_clinics(os.getenv("CLINICS_FILE", "clinics.json").strip() or "clinics.json"),
             clinics_per_article=int(os.getenv("CLINICS_PER_ARTICLE", "5") or "5"),
+            openai_api_key=os.getenv("OPENAI_API_KEY", "").strip(),
+            image_enabled=(os.getenv("IMAGE_GEN", "true").strip().lower() not in ("0", "false", "no", "off")),
+            image_model=os.getenv("IMAGE_MODEL", "gpt-image-2").strip() or "gpt-image-2",
+            image_quality=os.getenv("IMAGE_QUALITY", "medium").strip() or "medium",
+            image_section_max=int(os.getenv("IMAGE_SECTION_MAX", "3") or "3"),
+            image_audit_enabled=(os.getenv("IMAGE_AUDIT", "true").strip().lower() not in ("0", "false", "no", "off")),
+            image_audit_retries=int(os.getenv("IMAGE_AUDIT_RETRIES", "2") or "2"),
         )
         logger.info(
             "設定読み込み完了 model=%s pass_score=%s max_loops=%s wp=%s",
@@ -178,6 +196,40 @@ class ThemeReport(BaseModel):
     notes: str = Field(default="", description="網羅性・差別化に関する短い所見")
 
 
+class ImageSpec(BaseModel):
+    """記事に挿入する画像 1 枚の仕様（Structured Output）。"""
+
+    role: str = Field(..., description='"featured"（アイキャッチ）または "section"（本文挿絵）')
+    prompt: str = Field(
+        ...,
+        description="画像生成用の説明（英語）。被写体・構図のみ。スタイルはコードが付与する。文字・実写・顔・ビフォーアフターは描かせない。",
+    )
+    alt: str = Field(..., description="日本語の alt テキスト（SEO・アクセシビリティ用）")
+    after_heading: str = Field(
+        default="",
+        description='section の場合、この画像を直後に置く既存の H2 見出し文字列。featured は空。',
+    )
+
+
+class ImagePlan(BaseModel):
+    """記事全体の画像配置プラン（Structured Output）。"""
+
+    images: list[ImageSpec] = Field(default_factory=list)
+
+
+class ImageAudit(BaseModel):
+    """生成画像の品質監査（Claude vision の Structured Output）。"""
+
+    ok: bool = Field(..., description="記事に使える品質なら true")
+    garbled_text: bool = Field(
+        default=False, description="日本語に文字化け・誤字・意味不明な文字があれば true"
+    )
+    reason: str = Field(default="", description="判定理由の要約")
+    issues: list[str] = Field(
+        default_factory=list, description="不合格時の具体的な問題点（再生成の指示に使う）"
+    )
+
+
 @dataclass
 class Draft:
     """パイプライン内で受け渡す記事の状態。"""
@@ -199,6 +251,8 @@ class Draft:
     feedback: Optional[AuditResult] = None
     # この記事で紹介する提携クリニック（キーワードに応じて選定）
     clinics: list[dict] = field(default_factory=list)
+    # アイキャッチ画像の WordPress メディア ID（画像フェーズで設定）
+    featured_media_id: Optional[int] = None
 
 
 # -----------------------------------------------------------------------------
@@ -544,12 +598,36 @@ class WordPressClient:
             logger.info("%s 作成: %s -> %s", taxonomy, name, new_id)
         return ids
 
+    def upload_media(
+        self, image_bytes: bytes, filename: str, mime: str = "image/png", alt: str = ""
+    ) -> dict:
+        """画像をメディアライブラリにアップロードし、メディア情報（id, source_url）を返す。"""
+        headers = {
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Type": mime,
+        }
+        resp = self.session.post(
+            self._api("media"), headers=headers, data=image_bytes, timeout=self.timeout
+        )
+        resp.raise_for_status()
+        media = resp.json()
+        media_id = int(media["id"])
+        if alt:  # alt/タイトルは別リクエストで設定する
+            self.session.post(
+                self._api(f"media/{media_id}"),
+                json={"alt_text": alt, "title": alt},
+                timeout=self.timeout,
+            )
+        logger.info("メディアアップロード完了: id=%s url=%s", media_id, media.get("source_url"))
+        return media
+
     def create_draft(
         self,
         title: str,
         content_html: str,
         categories: Optional[list[str]] = None,
         tags: Optional[list[str]] = None,
+        featured_media: Optional[int] = None,
     ) -> dict:
         """
         記事を下書き（status=draft）として投稿する。
@@ -568,6 +646,8 @@ class WordPressClient:
             "content": content_html,
             "status": "draft",
         }
+        if featured_media:
+            payload["featured_media"] = featured_media
         if categories:
             payload["categories"] = self._resolve_term_ids("categories", categories)
         if tags:
@@ -870,6 +950,198 @@ class SEOAgent:
             len(draft.body_html),
         )
 
+    # --- 画像生成（OpenAI gpt-image-1）---------------------------------------
+    IMAGE_STYLE = (
+        "clean modern infographic-style flat illustration for a Japanese eye-care / medical article. "
+        "Soft rounded shapes, calm palette of light blue and teal on a white background with one warm "
+        "accent color, friendly and easy to understand at a glance. "
+        "Render the specified Japanese labels in CORRECT, LARGE, highly legible Japanese gothic "
+        "(sans-serif) lettering, kept minimal so it is readable on a smartphone: only a few short words, "
+        "plenty of whitespace, not cluttered. "
+        "NO photographs, NO real or identifiable person, NO before-and-after photos, NO exaggerated or "
+        "guaranteeing claims, NO logos."
+    )
+
+    @staticmethod
+    def _extract_h2(body_html: str) -> list[str]:
+        return [
+            re.sub(r"<[^>]+>", "", m).strip()
+            for m in re.findall(r"<h2[^>]*>(.*?)</h2>", body_html, re.S)
+        ]
+
+    def _plan_images(self, draft: Draft) -> list[ImageSpec]:
+        """記事に合う画像（アイキャッチ＋本文挿絵）の配置とプロンプトを設計する。"""
+        headings = self._extract_h2(draft.body_html)
+        system = (
+            "あなたは Web 記事のアートディレクターです。各見出しの内容が『ぱっと見でわかる』"
+            "図解（インフォグラフィック風のフラットイラスト）を計画します。"
+            "スマホでも読めるよう、画像内のラベルは短く・少なく・大きく。医療系のため、実在人物の"
+            "写真・ビフォーアフター・誇大表現は不可。"
+        )
+        user = (
+            f"記事タイトル: {draft.title}\n"
+            "H2 見出し一覧:\n" + "\n".join(f"- {h}" for h in headings) + "\n\n"
+            "各見出しの要点が一目で伝わる図解を計画し、JSON で出してください:\n"
+            "- featured（アイキャッチ）を必ず 1 枚。記事タイトルを象徴する図解。\n"
+            f"- section（本文挿絵）を {self.settings.image_section_max} 枚まで。各章の直後に置く。\n"
+            "各画像の項目:\n"
+            "  role: featured または section\n"
+            "  prompt: 画像生成用の指示（英語で構図・図解内容を説明し、画像内に表示する"
+            "『短い日本語ラベル（最大4個・各おおむね1〜6文字）』を引用符付きで明示する。"
+            'たとえば show a cross-section of an eye, label the implanted lens as "ICLレンズ"。'
+            "文字は少なく大きく、スマホで読めるシンプルさを最優先）\n"
+            "  alt: 日本語の説明文（SEO・アクセシビリティ用）\n"
+            "  after_heading: section のみ。上記 H2 の文字列と一致させる（featured は空）\n"
+            "1 枚に情報を詰め込みすぎないこと。"
+        )
+        message = self.client.messages.parse(
+            model=self.settings.model,
+            max_tokens=2000,
+            system=system,
+            messages=[{"role": "user", "content": user}],
+            output_format=ImagePlan,
+        )
+        plan = message.parsed_output
+        specs = plan.images if plan else []
+        featured = [s for s in specs if s.role == "featured"][:1]
+        sections = [s for s in specs if s.role != "featured"][: self.settings.image_section_max]
+        return featured + sections
+
+    def _generate_image(self, prompt: str, featured: bool) -> bytes:
+        """OpenAI で画像を 1 枚生成し、PNG バイト列を返す。"""
+        from openai import OpenAI  # 遅延 import（未導入でも他機能に影響しない）
+
+        client = OpenAI(api_key=self.settings.openai_api_key)
+        size = "1536x1024" if featured else "1024x1024"
+        resp = client.images.generate(
+            model=self.settings.image_model,
+            prompt=f"{prompt}. {self.IMAGE_STYLE}",
+            size=size,
+            quality=self.settings.image_quality,
+            n=1,
+        )
+        return base64.b64decode(resp.data[0].b64_json)
+
+    @staticmethod
+    def _insert_image(body_html: str, url: str, alt: str, after_heading: str) -> str:
+        """本文の該当 H2 の直後に <figure><img></figure> を挿入する。"""
+        fig = (
+            '<figure class="wp-block-image size-large">'
+            f'<img src="{html.escape(url, quote=True)}" alt="{html.escape(alt)}" loading="lazy" />'
+            "</figure>"
+        )
+        if after_heading:
+            key = after_heading.strip()[:12]
+            for m in re.finditer(r"<h2[^>]*>(.*?)</h2>", body_html, re.S):
+                inner = re.sub(r"<[^>]+>", "", m.group(1))
+                if key and key in inner:
+                    return body_html[: m.end()] + fig + body_html[m.end():]
+        m = re.search(r"</h2>", body_html)  # フォールバック: 最初の H2 直後、無ければ末尾
+        if m:
+            return body_html[: m.end()] + fig + body_html[m.end():]
+        return body_html + fig
+
+    def _audit_image(self, image_bytes: bytes, spec: ImageSpec) -> ImageAudit:
+        """生成画像を Claude vision で検査する（文字化け・内容・コンプラ・スマホ可読性）。"""
+        media_type = "image/png" if image_bytes[:8].startswith(b"\x89PNG") else "image/jpeg"
+        b64 = base64.b64encode(image_bytes).decode("ascii")
+        system = (
+            "あなたは記事用の図解画像の品質監査者です。次を厳格に検査します:\n"
+            "1) 画像内の日本語に文字化け・誤字・実在しない文字が無いか（あれば garbled_text=true, ok=false）\n"
+            "2) 内容が意図したテーマ・ラベルと合致しているか\n"
+            "3) 医療コンプラ: 実在人物の写真・ビフォーアフター・誇大/効果保証表現が無いか\n"
+            "4) スマホで読めるか（文字が多すぎ／小さすぎ／詰め込みすぎでないか）\n"
+            "いずれか問題があれば ok=false とし、issues に再生成用の具体的な修正指示を書くこと。"
+        )
+        user_text = (
+            f"この画像の意図（alt）: {spec.alt}\n"
+            f"狙った図解内容: {spec.prompt[:400]}\n"
+            "上記を踏まえ画像を検査し、ok / garbled_text / reason / issues を返してください。"
+        )
+        message = self.client.messages.parse(
+            model=self.settings.model,
+            max_tokens=1000,
+            system=system,
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": b64}},
+                    {"type": "text", "text": user_text},
+                ],
+            }],
+            output_format=ImageAudit,
+        )
+        return message.parsed_output or ImageAudit(ok=True)
+
+    def _make_audited_image(self, spec: ImageSpec, featured: bool) -> Optional[bytes]:
+        """生成→監査→必要なら再生成。文字化けが解消しなければ採用を見送る（None）。"""
+        prompt = spec.prompt
+        last_bytes: Optional[bytes] = None
+        last_verdict: Optional[ImageAudit] = None
+        attempts = 1 + (self.settings.image_audit_retries if self.settings.image_audit_enabled else 0)
+        for attempt in range(1, attempts + 1):
+            try:
+                img = self._generate_image(prompt, featured=featured)
+            except Exception as exc:
+                logger.warning("画像生成に失敗: %s", exc)
+                return last_bytes
+            last_bytes = img
+            if not self.settings.image_audit_enabled:
+                return img
+            try:
+                v = self._audit_image(img, spec)
+            except Exception as exc:
+                logger.warning("画像監査に失敗（その画像を採用）: %s", exc)
+                return img
+            last_verdict = v
+            if v.ok:
+                logger.info("[画像監査] 合格（attempt=%d）: %s", attempt, spec.alt[:24])
+                return img
+            logger.warning(
+                "[画像監査] 不合格（attempt=%d, garbled=%s）: %s",
+                attempt, v.garbled_text, "／".join(v.issues)[:120],
+            )
+            prompt = spec.prompt + " | Fix these issues: " + "; ".join(v.issues)
+        # 規定回数で合格せず: 文字化けが残るなら採用見送り、軽微な不一致なら最後の画像を採用。
+        if last_verdict and last_verdict.garbled_text:
+            logger.warning("[画像監査] 文字化けが解消せず画像を見送り: %s", spec.alt[:24])
+            return None
+        logger.warning("[画像監査] 規定回数で合格せず最後の画像を採用: %s", spec.alt[:24])
+        return last_bytes
+
+    def illustrate(self, draft: Draft, wp: "WordPressClient") -> None:
+        """[画像] 図解を生成・監査し、アイキャッチ設定＋本文へ挿絵を挿入する（best-effort）。"""
+        if not (self.settings.image_enabled and self.settings.openai_api_key):
+            return
+        logger.info("[画像] 画像プランを作成します（model=%s）", self.settings.image_model)
+        try:
+            specs = self._plan_images(draft)
+        except Exception as exc:
+            logger.warning("画像プラン作成に失敗（画像なしで続行）: %s", exc)
+            return
+        slug = re.sub(r"[^a-zA-Z0-9]+", "-", draft.keyword)[:20] or "img"
+        added = 0
+        for i, spec in enumerate(specs):
+            featured = spec.role == "featured"
+            img = self._make_audited_image(spec, featured)
+            if img is None:
+                continue
+            is_png = img[:8].startswith(b"\x89PNG")
+            ext, mime = ("png", "image/png") if is_png else ("jpg", "image/jpeg")
+            try:
+                media = wp.upload_media(img, filename=f"seo-{slug}-{i}.{ext}", mime=mime, alt=spec.alt)
+            except Exception as exc:
+                logger.warning("画像アップロードに失敗（スキップ）: %s", exc)
+                continue
+            if featured and draft.featured_media_id is None:
+                draft.featured_media_id = int(media["id"])
+            else:
+                draft.body_html = self._insert_image(
+                    draft.body_html, media.get("source_url", ""), spec.alt, spec.after_heading
+                )
+            added += 1
+        logger.info("[画像] %d 枚を反映（アイキャッチ=%s）", added, draft.featured_media_id is not None)
+
     def audit(self, draft: Draft) -> AuditResult:
         """[監査] Structured Outputs で SEO 品質を厳格採点する。"""
         logger.info("[監査] title=%s", draft.title)
@@ -997,11 +1269,13 @@ class SEOAgent:
                 else:
                     self.settings.require_wordpress()
                     wp = WordPressClient(self.settings)
+                    self.illustrate(draft, wp)
                     post = wp.create_draft(
                         title=draft.title,
                         content_html=draft.body_html,
                         categories=draft.categories,
                         tags=draft.tags,
+                        featured_media=draft.featured_media_id,
                     )
                 return {
                     "status": "passed",
