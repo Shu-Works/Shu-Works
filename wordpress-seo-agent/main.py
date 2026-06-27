@@ -590,7 +590,10 @@ def render_clinic_card(clinic: dict) -> str:
     row("口コミ評価", html.escape(clinic.get("review_rating", "")))
     row("金額（税込）", ul(clinic.get("prices", [])))
     row("支払方法", ul(clinic.get("payment", [])))
-    row("電話番号", html.escape(clinic.get("phone", "")))
+    phone = clinic.get("phone", "")
+    if phone:  # スマホでタップ発信できる tel: リンクにする
+        tel = re.sub(r"[^0-9+]", "", phone)
+        row("電話番号", f'<a href="tel:{html.escape(tel, quote=True)}">{html.escape(phone)}</a>')
     row("住所", html.escape(clinic.get("address", "")))
     row("アクセス", html.escape(clinic.get("access", "")))
     row("受付時間", html.escape(clinic.get("hours", "")))
