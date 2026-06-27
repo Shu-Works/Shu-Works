@@ -617,6 +617,36 @@ def render_clinic_card(clinic: dict) -> str:
     )
 
 
+def render_recommendation_block(clinic: dict) -> str:
+    """記事末尾の「迷ったらこちらがおすすめ！」ブロック（見出し＋公式スクショ＋理由＋申込ボタン）。"""
+    name = html.escape(clinic.get("name", ""))
+    shot = clinic.get("screenshot_url", "")
+    reasons = clinic.get("reasons") or clinic.get("points") or []
+    shot_html = (
+        f'<figure class="wp-block-image" style="margin:0 0 14px;">'
+        f'<img src="{html.escape(shot, quote=True)}" alt="{name}の公式サイト" loading="lazy" '
+        f'style="width:100%;border:1px solid #eee;border-radius:6px;" /></figure>'
+        if shot else ""
+    )
+    lis = "".join(
+        f'<li style="font-weight:bold;color:#c0392b;margin:4px 0;">{html.escape(str(r))}</li>'
+        for r in reasons[:3]
+    )
+    reasons_html = f'<ol style="padding-left:1.4em;margin:8px 0 14px;">{lis}</ol>' if lis else ""
+    para = (
+        f"<p>迷ったら、土日祝も対応していてICL・レーシックの両方を相談できる"
+        f"{name}で、まずは無料の適応検査を受けてみるのがおすすめです。"
+        "下のボタンから公式サイトで詳細を確認できます。</p>"
+    )
+    button = _cta_button(clinic, f"{clinic.get('name', '')}の公式サイトはこちら", big=True)
+    return (
+        '<div class="clinic-recommend" style="border:2px solid #27ae60;border-radius:12px;'
+        'padding:18px;margin:28px 0;background:#f3fbf6;">'
+        f'<h2 style="margin-top:0;">迷ったら「{name}」がおすすめ！その理由とは？</h2>'
+        f"{shot_html}{reasons_html}{para}{button}</div>"
+    )
+
+
 def inject_clinics(body_html: str, clinics: list[dict]) -> str:
     """本文中の目印を、実際の案件リンク（基本情報カード・比較表・CTA）に置換する。"""
     if not clinics:
@@ -1104,6 +1134,11 @@ class SEOAgent:
             return
         before = len(draft.body_html)
         draft.body_html = inject_clinics(draft.body_html, draft.clinics)
+        # 記事末尾に「迷ったらこちら」推しクリニックを追加（clinics.json の recommended:true）。
+        rec = next((c for c in self.settings.clinics if c.get("recommended")), None)
+        if rec:
+            draft.body_html += render_recommendation_block(rec)
+            logger.info("[案件注入] おすすめブロックを末尾に追加: %s", rec.get("name"))
         logger.info(
             "[案件注入] クリニック %d 件のリンクを反映（%d→%d 文字）",
             len(draft.clinics),
