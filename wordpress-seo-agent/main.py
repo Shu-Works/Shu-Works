@@ -669,6 +669,8 @@ class WordPressClient:
             payload["featured_media"] = featured_media
         if slug:
             payload["slug"] = slug
+        if meta_description:  # 標準の抜粋にも入れる（一覧表示・テーマによってはメタにも使われる）
+            payload["excerpt"] = meta_description
         if categories:
             payload["categories"] = self._resolve_term_ids("categories", categories)
         if tags:
@@ -858,6 +860,9 @@ class SEOAgent:
             "あなたは検索意図を構造化に落とし込む SEO 編集者です。"
             "網羅性と読了率の両立を意識し、論理的な H2/H3 構成を設計します。"
             "出力は必ず指定の JSON 形式のみ（前後に説明文を付けない）。"
+            " 医療系のため、実在しない監修者・専門家の関与を偽ってはいけません。"
+            "タイトル等に『医師監修』『医師が解説』『専門医監修』など、監修者が実在しない限り"
+            "使わないこと（虚偽・誇大の禁止）。"
         )
         cat_choices = " / ".join(self.settings.wp_categories)
         user = (
@@ -928,6 +933,8 @@ class SEOAgent:
                 "(3) ビフォーアフターや誇大・虚偽の表現を使わない。(4) 費用を過度に煽らない。"
                 "(5) 効果には個人差がある前提で断定を避け、リスクや自由診療である旨にも触れる。"
                 "(6) 各クリニック公式サイトの文章・体験談をそのまま転載しない。"
+                "(7) 監修者が実在しない限り『医師監修』『医師が解説』『専門医監修』等、"
+                "専門家の関与を偽る表現をタイトル・本文で使わない。"
                 " PR（広告）である旨の明記は冒頭にコードが付与するので、本文では繰り返さないこと。"
             )
         user = (
