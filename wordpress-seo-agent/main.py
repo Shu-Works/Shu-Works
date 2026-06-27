@@ -70,6 +70,10 @@ class Settings:
     wordpress_app_password: str
     default_categories: list[str] = field(default_factory=list)
     default_tags: list[str] = field(default_factory=list)
+    # 記事を分類する候補カテゴリ（この中から LLM が 1 つ選ぶ）。
+    wp_categories: list[str] = field(
+        default_factory=lambda: ["レーシック", "ICL", "近視矯正", "オルソケラトロジー", "子どもの近視", "視力回復"]
+    )
 
     # 競合分析（検索プロバイダ）。キー未設定なら自動的に無効化される。
     search_provider: str = "auto"  # auto | serpapi | google_cse | none
@@ -123,6 +127,8 @@ class Settings:
             wordpress_app_password=wp_pass,
             default_categories=_split("WORDPRESS_DEFAULT_CATEGORIES"),
             default_tags=_split("WORDPRESS_DEFAULT_TAGS"),
+            wp_categories=(_split("WORDPRESS_CATEGORIES") or
+                           ["レーシック", "ICL", "近視矯正", "オルソケラトロジー", "子どもの近視", "視力回復"]),
             search_provider=(os.getenv("SEO_SEARCH_PROVIDER", "auto").strip() or "auto"),
             serpapi_api_key=os.getenv("SERPAPI_API_KEY", "").strip(),
             google_cse_api_key=os.getenv("GOOGLE_CSE_API_KEY", "").strip(),
@@ -246,6 +252,10 @@ class Draft:
     categories: list[str] = field(default_factory=list)
     analysis: str = ""
     outline: str = ""
+    # SEO 項目（パーマリンク用スラッグ・メタ情報）
+    slug: str = ""
+    meta_description: str = ""
+    meta_keywords: str = ""
     # 競合分析の結果テキスト（ループ間で再取得しないようキャッシュ）
     competitor: str = ""
     # 競合 H2 集計で得た「必須テーマ」（監査での網羅性突合に使う）
@@ -633,6 +643,10 @@ class WordPressClient:
         categories: Optional[list[str]] = None,
         tags: Optional[list[str]] = None,
         featured_media: Optional[int] = None,
+        slug: Optional[str] = None,
+        meta_description: Optional[str] = None,
+        meta_keywords: Optional[str] = None,
+        seo_title: Optional[str] = None,
     ) -> dict:
         """
         記事を下書き（status=draft）として投稿する。
@@ -653,6 +667,8 @@ class WordPressClient:
         }
         if featured_media:
             payload["featured_media"] = featured_media
+        if slug:
+            payload["slug"] = slug
         if categories:
             payload["categories"] = self._resolve_term_ids("categories", categories)
         if tags:
@@ -662,10 +678,31 @@ class WordPressClient:
         resp = self.session.post(self._api("posts"), json=payload, timeout=self.timeout)
         resp.raise_for_status()
         data = resp.json()
+        post_id = data.get("id")
+        # SEO メタ（Cocoon の独自欄）は別リクエストで best-effort 設定する。
+        # 未登録（PHP スニペット未導入）なら失敗するが、投稿自体は成功させる。
+        meta = {}
+        if seo_title:
+            meta["the_page_seo_title"] = seo_title
+        if meta_description:
+            meta["the_page_meta_description"] = meta_description
+        if meta_keywords:
+            meta["the_page_meta_keywords"] = meta_keywords
+        if meta and post_id:
+            try:
+                r = self.session.post(
+                    self._api(f"posts/{post_id}"), json={"meta": meta}, timeout=self.timeout
+                )
+                r.raise_for_status()
+                logger.info("SEOメタ設定OK: desc=%d文字 kw=%s", len(meta_description or ""), bool(meta_keywords))
+            except Exception as exc:
+                logger.warning(
+                    "SEOメタ設定に失敗（Cocoonメタの REST 登録スニペットが必要）: %s", str(exc)[:120]
+                )
         logger.info(
             "下書き投稿完了: id=%s edit=%s",
-            data.get("id"),
-            f"{self.base_url}/wp-admin/post.php?post={data.get('id')}&action=edit",
+            post_id,
+            f"{self.base_url}/wp-admin/post.php?post={post_id}&action=edit",
         )
         return data
 
@@ -822,14 +859,18 @@ class SEOAgent:
             "網羅性と読了率の両立を意識し、論理的な H2/H3 構成を設計します。"
             "出力は必ず指定の JSON 形式のみ（前後に説明文を付けない）。"
         )
+        cat_choices = " / ".join(self.settings.wp_categories)
         user = (
             f"狙うキーワード: 「{draft.keyword}」\n\n"
             f"=== 分析結果 ===\n{draft.analysis}\n\n"
             "この分析に基づき、以下のキーのみを持つ JSON を 1 つ出力してください:\n"
             "{\n"
-            '  "title": "32文字前後のSEOタイトル（キーワードを自然に含む）",\n'
+            '  "title": "32文字前後の魅力的なSEOタイトル（キーワードを含み、クリックされる）",\n'
+            '  "slug": "英語の短いURLスラッグ（小文字・ハイフン区切り・記事内容を表す。例 lasik-icl-difference）",\n'
+            f'  "category": "次から最も適切なものを1つだけ選ぶ: {cat_choices}",\n'
+            '  "meta_description": "120文字前後のメタディスクリプション（検索意図に応え、クリックを促し、キーワードを自然に含む）",\n'
+            '  "meta_keywords": "関連キーワードをカンマ区切りで5個前後",\n'
             '  "outline": "H2/H3 を字下げで表現した構成案（テキスト）",\n'
-            '  "categories": ["カテゴリ名"],\n'
             '  "tags": ["タグ", "タグ"]\n'
             "}\n"
         )
@@ -843,10 +884,17 @@ class SEOAgent:
         data = self._loads_json(raw)
         draft.title = data.get("title", draft.title) or draft.title
         draft.outline = data.get("outline", "")
-        # 既定値があれば優先しつつ、LLM 提案を補完する。
-        draft.categories = self.settings.default_categories or data.get("categories", []) or []
+        draft.slug = self._slugify(data.get("slug", "")) or self._slugify(draft.title)
+        draft.meta_description = (data.get("meta_description", "") or "").strip()
+        draft.meta_keywords = (data.get("meta_keywords", "") or "").strip()
+        # カテゴリは候補から選ばれた 1 つを優先（無ければ既定や LLM の categories で補完）。
+        chosen = (data.get("category", "") or "").strip()
+        if chosen:
+            draft.categories = [chosen]
+        else:
+            draft.categories = self.settings.default_categories or data.get("categories", []) or []
         draft.tags = self.settings.default_tags or data.get("tags", []) or []
-        logger.info("[構成] 完了 title=%s tags=%s", draft.title, draft.tags)
+        logger.info("[構成] 完了 title=%s slug=%s cat=%s", draft.title, draft.slug, draft.categories)
 
     def write(self, draft: Draft) -> None:
         """[作成] 構成に沿って HTML 本文を生成する。"""
@@ -984,10 +1032,14 @@ class SEOAgent:
             "写真・ビフォーアフター・誇大表現は不可。"
         )
         user = (
+            f"狙うキーワード: {draft.keyword}\n"
             f"記事タイトル: {draft.title}\n"
             "H2 見出し一覧:\n" + "\n".join(f"- {h}" for h in headings) + "\n\n"
             "各見出しの要点が一目で伝わる図解を計画し、JSON で出してください:\n"
-            "- featured（アイキャッチ）を必ず 1 枚。記事タイトルを象徴する図解。\n"
+            "- featured（アイキャッチ＝検索結果・SNS・Pinterest のサムネ）を必ず 1 枚。"
+            "アフィリ記事の集客の要なので、クリックされる魅力的なサムネにする。記事の結論やフックを表す"
+            "短く大きな日本語タイトル（最大10文字程度）を入れ、高コントラストでスマホの小さな表示でも"
+            "目を引くデザインにする。alt には狙うキーワードを必ず含める。\n"
             f"- section（本文挿絵）を {self.settings.image_section_max} 枚まで。各章の直後に置く。\n"
             "各画像の項目:\n"
             "  role: featured または section\n"
@@ -1138,11 +1190,14 @@ class SEOAgent:
             logger.warning("画像プラン作成に失敗（画像なしで続行）: %s", exc)
             return
         mime, ext = self._image_mime_ext()
-        slug = re.sub(r"[^a-zA-Z0-9]+", "-", draft.keyword)[:20] or "img"
+        slug = draft.slug or self._slugify(draft.keyword) or "img"
         added = 0
         first_media_id: Optional[int] = None
         for i, spec in enumerate(specs):
             featured = spec.role == "featured"
+            # サムネ（featured）の alt には狙うキーワードを必ず含める（SEO）。
+            if featured and draft.keyword and draft.keyword not in spec.alt:
+                spec.alt = f"{draft.keyword}｜{spec.alt}" if spec.alt else draft.keyword
             img = self._make_audited_image(spec, featured)
             if img is None:
                 continue
@@ -1237,6 +1292,13 @@ class SEOAgent:
         return "\n".join(lines)
 
     @staticmethod
+    def _slugify(text: str) -> str:
+        """英数字とハイフンだけの URL スラッグに整える（日本語等は除去）。"""
+        s = (text or "").strip().lower()
+        s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+        return s[:60]
+
+    @staticmethod
     def _strip_code_fence(text: str) -> str:
         """LLM が誤って付けた ```html ... ``` フェンスを除去する。"""
         t = text.strip()
@@ -1301,6 +1363,10 @@ class SEOAgent:
                         categories=draft.categories,
                         tags=draft.tags,
                         featured_media=draft.featured_media_id,
+                        slug=draft.slug,
+                        meta_description=draft.meta_description,
+                        meta_keywords=draft.meta_keywords,
+                        seo_title=draft.title,
                     )
                 return {
                     "status": "passed",
