@@ -88,6 +88,9 @@ class Settings:
     image_model: str = "gpt-image-2"
     image_quality: str = "medium"
     image_section_max: int = 3
+    # 出力フォーマット（サイト軽量化のため既定 webp）と圧縮率（0-100, webp/jpeg のみ）
+    image_format: str = "webp"
+    image_compression: int = 80
     # イラスト監査（Claude vision で文字化け・内容・コンプラを検査して再生成）
     image_audit_enabled: bool = True
     image_audit_retries: int = 2
@@ -132,6 +135,8 @@ class Settings:
             image_model=os.getenv("IMAGE_MODEL", "gpt-image-2").strip() or "gpt-image-2",
             image_quality=os.getenv("IMAGE_QUALITY", "medium").strip() or "medium",
             image_section_max=int(os.getenv("IMAGE_SECTION_MAX", "3") or "3"),
+            image_format=os.getenv("IMAGE_FORMAT", "webp").strip().lower() or "webp",
+            image_compression=int(os.getenv("IMAGE_COMPRESSION", "80") or "80"),
             image_audit_enabled=(os.getenv("IMAGE_AUDIT", "true").strip().lower() not in ("0", "false", "no", "off")),
             image_audit_retries=int(os.getenv("IMAGE_AUDIT_RETRIES", "2") or "2"),
         )
@@ -1007,19 +1012,32 @@ class SEOAgent:
         sections = [s for s in specs if s.role != "featured"][: self.settings.image_section_max]
         return featured + sections
 
+    def _image_mime_ext(self) -> tuple[str, str]:
+        """設定の出力フォーマットから (mime, 拡張子) を返す。"""
+        fmt = (self.settings.image_format or "webp").lower()
+        if fmt in ("jpg", "jpeg"):
+            return "image/jpeg", "jpg"
+        if fmt == "png":
+            return "image/png", "png"
+        return "image/webp", "webp"
+
     def _generate_image(self, prompt: str, featured: bool) -> bytes:
-        """OpenAI で画像を 1 枚生成し、PNG バイト列を返す。"""
+        """OpenAI で画像を 1 枚生成し、画像バイト列を返す（既定 WebP）。"""
         from openai import OpenAI  # 遅延 import（未導入でも他機能に影響しない）
 
         client = OpenAI(api_key=self.settings.openai_api_key)
-        size = "1536x1024" if featured else "1024x1024"
-        resp = client.images.generate(
-            model=self.settings.image_model,
-            prompt=f"{prompt}. {self.IMAGE_STYLE}",
-            size=size,
-            quality=self.settings.image_quality,
-            n=1,
-        )
+        fmt = "jpeg" if self.settings.image_format in ("jpg", "jpeg") else self.settings.image_format
+        kwargs: dict = {
+            "model": self.settings.image_model,
+            "prompt": f"{prompt}. {self.IMAGE_STYLE}",
+            "size": "1536x1024" if featured else "1024x1024",
+            "quality": self.settings.image_quality,
+            "n": 1,
+            "output_format": fmt,
+        }
+        if fmt in ("webp", "jpeg"):  # 圧縮率は webp/jpeg のみ有効
+            kwargs["output_compression"] = self.settings.image_compression
+        resp = client.images.generate(**kwargs)
         return base64.b64decode(resp.data[0].b64_json)
 
     @staticmethod
@@ -1043,7 +1061,7 @@ class SEOAgent:
 
     def _audit_image(self, image_bytes: bytes, spec: ImageSpec) -> ImageAudit:
         """生成画像を Claude vision で検査する（文字化け・内容・コンプラ・スマホ可読性）。"""
-        media_type = "image/png" if image_bytes[:8].startswith(b"\x89PNG") else "image/jpeg"
+        media_type, _ = self._image_mime_ext()
         b64 = base64.b64encode(image_bytes).decode("ascii")
         system = (
             "あなたは記事用の図解画像の品質監査者です。次を厳格に検査します:\n"
@@ -1119,27 +1137,34 @@ class SEOAgent:
         except Exception as exc:
             logger.warning("画像プラン作成に失敗（画像なしで続行）: %s", exc)
             return
+        mime, ext = self._image_mime_ext()
         slug = re.sub(r"[^a-zA-Z0-9]+", "-", draft.keyword)[:20] or "img"
         added = 0
+        first_media_id: Optional[int] = None
         for i, spec in enumerate(specs):
             featured = spec.role == "featured"
             img = self._make_audited_image(spec, featured)
             if img is None:
                 continue
-            is_png = img[:8].startswith(b"\x89PNG")
-            ext, mime = ("png", "image/png") if is_png else ("jpg", "image/jpeg")
             try:
                 media = wp.upload_media(img, filename=f"seo-{slug}-{i}.{ext}", mime=mime, alt=spec.alt)
             except Exception as exc:
                 logger.warning("画像アップロードに失敗（スキップ）: %s", exc)
                 continue
+            media_id = int(media["id"])
+            if first_media_id is None:
+                first_media_id = media_id
             if featured and draft.featured_media_id is None:
-                draft.featured_media_id = int(media["id"])
+                draft.featured_media_id = media_id
             else:
                 draft.body_html = self._insert_image(
                     draft.body_html, media.get("source_url", ""), spec.alt, spec.after_heading
                 )
             added += 1
+        # サムネ（アイキャッチ）は必ず設定する: featured が無ければ最初の画像で代替する。
+        if draft.featured_media_id is None and first_media_id is not None:
+            draft.featured_media_id = first_media_id
+            logger.info("[画像] featured 未取得のため最初の画像をサムネに採用: id=%s", first_media_id)
         logger.info("[画像] %d 枚を反映（アイキャッチ=%s）", added, draft.featured_media_id is not None)
 
     def audit(self, draft: Draft) -> AuditResult:
