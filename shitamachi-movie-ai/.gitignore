@@ -1,0 +1,20 @@
+# 秘密情報
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 生成物（サイズが大きい・毎回再生成できる）
+output/*.mp4
+assets/images/*.png
+assets/images/*.jpg
+assets/audio/*.mp3
+assets/audio/*.wav
+assets/subtitles/*.srt
+data/scripts/*.json
+
+# .gitkeep は残す
+!**/.gitkeep
