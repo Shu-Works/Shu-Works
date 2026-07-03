@@ -11,10 +11,10 @@ venv/
 output/*.mp4
 assets/images/*.png
 assets/images/*.jpg
-assets/audio/*.mp3
-assets/audio/*.wav
-assets/subtitles/*.srt
 data/scripts/*.json
+data/canva/narration/
+data/canva/*.csv
+data/canva/*.md
 
 # .gitkeep は残す
 !**/.gitkeep

@@ -42,13 +42,11 @@ main.py（司令塔・冪等・途中再開可）
   │     → 画像生成は Codex（ChatGPT定額枠）に委譲。納品された画像を
   │       命名規則・解像度・16:9 で自動検収（--check）
   │
-  ├─ ステップ3  scripts/generate_audio.py
-  │     OpenAI TTS（nova・NHK解説調の指示付き）で章ごとにナレーション生成
-  │     → Whisper でタイムスタンプを取得し SRT を assets/subtitles/ に出力
-  │
-  └─ ステップ4  scripts/edit_video.py
-        MoviePy v2 で 音声＋画像スライドショー＋BGM＋焼き付け字幕 を統合
-        → output/ に 1080p MP4（YouTubeアップロード可能品質）を書き出し
+  └─ ステップ3  scripts/export_canva.py
+        Canva入稿パッケージを data/canva/ に出力:
+        章別ナレ原稿（AIナレーターに貼るだけ）/ storyboard.csv（章×画像×
+        推定尺の設計図）/ CANVA_TASK.md（組み立て手順書+公開前チェックリスト）
+        → 音声・字幕・BGM・組み立て・MP4書き出しは Canva（定額枠）で行う
 ```
 
 各ステップの受け渡しは**ファイル**（JSON / PNG / MP3 / SRT）で行う。
@@ -80,10 +78,12 @@ API呼び出しは全ステップで再実行時にスキップされる冪等�
 | --- | --- | --- | --- |
 | 台本 | **Claude API（Web検索ツール付き）** | Perplexity API | 〜$0.5 |
 | 画像 | **Codex に委譲**（ChatGPT定額枠・CSV指示書経由） | DALL-E 3(〜$2.4) / FLUX via Replicate(〜$0.1)。Midjourneyは非公式APIのみ=規約違反リスクで不採用 | $0（定額内） |
-| 音声 | **OpenAI TTS (gpt-4o-mini-tts, nova)** + Whisper字幕 | ElevenLabs（高品質・文字単位タイムスタンプ） | OpenAI: 〜$0.5 / 11Labs: 月$22〜 |
-| 編集 | **MoviePy v2 + imageio-ffmpeg** | ffmpeg直叩き（速いが保守性低） | $0 |
+| 音声・字幕・編集 | **Canva に委譲**（AIナレーター+自動キャプション+組み立て+MP4書き出し。定額枠） | OpenAI TTS+Whisper+MoviePy による全自動化（コード実装が必要・音声$0.5/本） | $0（定額内） |
 
-**合計: 1本 約$1.0（API実費）+ ChatGPT/Claude の定額利用料**
+**合計: 1本 約$0.5（API実費）+ ChatGPT/Canva/Claude の定額利用料**
+
+長尺ナレーションのTTSはCanvaのクレジット消費が未知数のため、パイロット1本で
+実測すること。枠が足りない場合は代替（OpenAI TTS）に切り戻す。
 
 ### ステップ2の運用フロー（Codex委譲）
 
@@ -107,13 +107,14 @@ Codex をローカル（CLI/デスクトップ）で動かせば画像は直接 
 cd shitamachi-movie-ai
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # APIキーを記入
-python main.py
+cp .env.example .env   # ANTHROPIC_API_KEY を記入（必要なキーはこれ1つ）
+python main.py         # 台本 → 画像発注書 → Canva入稿パッケージ
 ```
 
-BGM はエピック・オーケストラ調のフリー音源（YouTube Audio Library 等、
-商用利用可・クレジット条件を確認したもの）を `assets/bgm/` に手動で1曲以上
-配置する。編集ステップが自動で尺に合わせてループ・音量調整する。
+パイプライン完了後、`data/canva/CANVA_TASK.md` の手順に沿って Canva 上で
+音声・字幕・BGM を付けて組み立て、MP4 を `output/` に書き出す。
+BGM は Canva オーディオ素材から商用利用可のエピック・オーケストラ調を選ぶ
+（音量の目安は手順書に記載）。
 
 ## 運用上の重要リスク（必読）
 
@@ -126,5 +127,5 @@ BGM はエピック・オーケストラ調のフリー音源（YouTube Audio Li
    独自の見解の追加を運用に組み込むこと。
 3. **Midjourney**: 公式APIが存在せず、非公式APIは規約違反でアカウント
    凍結リスクがあるため採用しない。
-4. **BGM著作権**: 「フリー音源の自動取得」はライセンス確認を自動化できない
-   ため、人間が確認済みの音源を `assets/bgm/` に置く方式とする。
+4. **BGM著作権**: ライセンス確認は自動化できないため、Canva オーディオ素材の
+   商用利用可のものを人間が選ぶ（公開前チェックリストに組み込み済み）。

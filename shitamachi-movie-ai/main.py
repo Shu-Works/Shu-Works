@@ -1,7 +1,13 @@
 """shitamachi-movie-ai パイプライン司令塔。
 
-4ステップを順番に実行する。各ステップは冪等（生成済みならスキップ）に
+3ステップを順番に実行する。各ステップは冪等（生成済みならスキップ）に
 実装するので、途中で落ちても同じコマンドで再開できる。
+
+  1. 台本生成（Claude + Web検索）
+  2. 画像発注書の出力 + Codex納品画像の検収
+  3. Canva入稿パッケージの出力
+  → 以降（音声・字幕・組み立て・MP4書き出し）は Canva 上で行う。
+    手順は data/canva/CANVA_TASK.md に自動生成される
 
 使い方:
     python main.py                        # 全ステップ実行
@@ -15,7 +21,7 @@ import sys
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="YouTube動画 全自動生成パイプライン")
-    parser.add_argument("--from-step", type=int, default=1, choices=[1, 2, 3, 4],
+    parser.add_argument("--from-step", type=int, default=1, choices=[1, 2, 3],
                         help="このステップから再開する")
     parser.add_argument("--topic", type=str, default=None,
                         help="題材の企業・技術を指定（省略時はLLMが自動リサーチで選定）")
@@ -25,28 +31,23 @@ def main() -> int:
 
     steps = [
         (1, "リサーチ・台本生成", "scripts.generate_script"),
-        (2, "画像素材の自動生成", "scripts.generate_images"),
-        (3, "AI音声・字幕生成", "scripts.generate_audio"),
-        (4, "MoviePy編集・書き出し", "scripts.edit_video"),
+        (2, "画像発注書の出力 + 納品検収", "scripts.generate_images"),
+        (3, "Canva入稿パッケージの出力", "scripts.export_canva"),
     ]
 
     for num, name, module in steps:
         if num < args.from_step:
             continue
         print(f"\n{'=' * 60}\nステップ{num}: {name}\n{'=' * 60}")
-        # 各ステップのモジュールは今後の段階で実装する。
-        # それぞれ run(topic=None) -> None を公開する契約とする。
-        try:
-            mod = __import__(module, fromlist=["run"])
-        except ImportError:
-            print(f"  [未実装] {module} はまだ存在しない。次の開発段階で実装する。")
-            continue
+        # 各ステップは run(topic=None) -> None を公開する契約
+        mod = __import__(module, fromlist=["run"])
         kwargs = {"topic": args.topic}
         # シリーズは台本生成だけが受け取る（以降のステップは台本JSONの_metaから読む）
         if num == 1 and args.series:
             kwargs["series"] = args.series
         mod.run(**kwargs)
 
+    print("\nパイプライン完了。以降は data/canva/CANVA_TASK.md の手順でCanva上で組み立てる")
     return 0
 
 

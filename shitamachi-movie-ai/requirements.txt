@@ -1,24 +1,18 @@
-# shitamachi-movie-ai — YouTube動画全自動生成パイプライン
+# shitamachi-movie-ai — YouTube動画生成パイプライン
 # Python 3.11+
+#
+# 外部APIはClaude（台本生成）のみ。画像はCodex（ChatGPT定額枠）、
+# 音声・字幕・編集・書き出しはCanva（定額枠）に委譲しているため、
+# 動画編集系ライブラリ（moviepy等）・TTS系SDKは使わない。
 
-# ─── LLM / API クライアント ───
-anthropic>=0.40.0          # ステップ1: リサーチ+台本生成（Claude API / Web検索ツール対応）
-openai>=1.50.0             # ステップ2/3: DALL-E 3 画像生成・TTS音声・Whisper字幕タイムスタンプ
-elevenlabs>=1.50.0         # ステップ3(代替): 高品質TTS（文字単位タイムスタンプ付き）
+# ─── LLM ───
+anthropic>=0.40.0          # ステップ1: リサーチ+台本生成（Web検索ツール対応）
 
-# ─── HTTP / 環境変数 ───
-requests>=2.32.0
+# ─── 環境変数 ───
 python-dotenv>=1.0.1       # .env からAPIキーを読み込む
 
-# ─── 動画・音声・画像処理 ───
-moviepy>=2.1.1             # ステップ4: 動画編集（v2系。v1とAPIが違うので注意）
-imageio-ffmpeg>=0.5.1      # ffmpegバイナリ同梱（システムにffmpeg不要）
-Pillow>=10.4.0             # 画像リサイズ・16:9パディング・テロップ描画
-numpy>=1.26.0              # moviepy依存・音量調整
-
-# ─── 字幕 ───
-# SRTは単純なテキスト形式のため外部ライブラリを使わず自前生成する
-# （srt パッケージは setup.py ベースでビルド不安定のため不採用）
+# ─── 画像検収 ───
+Pillow>=10.4.0             # ステップ2: 納品画像の解像度・アスペクト比チェック
 
 # ─── ユーティリティ ───
 pydantic>=2.9.0            # 台本JSONのスキーマ検証（LLM出力の型崩れ対策）
