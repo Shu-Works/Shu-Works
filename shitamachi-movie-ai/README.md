@@ -23,8 +23,11 @@ main.py（司令塔・冪等・途中再開可）
   │     → 構成の型に沿った6章構造の台本JSONを data/scripts/ に出力
   │
   ├─ ステップ2  scripts/generate_images.py
-  │     台本の各章から英語プロンプトを自動生成（固定スタイル呪文を付与）
-  │     → DALL-E 3 / FLUX で章ごとに3〜5枚、計25〜30枚を assets/images/ に連番保存
+  │     台本の各章のプロンプトに固定スタイル呪文を付与し、
+  │     data/prompts/image_prompts.csv（スプレッドシート互換）と
+  │     CODEX_TASK.md（Codex用指示書）をエクスポート
+  │     → 画像生成は Codex（ChatGPT定額枠）に委譲。納品された画像を
+  │       命名規則・解像度・16:9 で自動検収（--check）
   │
   ├─ ステップ3  scripts/generate_audio.py
   │     OpenAI TTS（nova・NHK解説調の指示付き）で章ごとにナレーション生成
@@ -63,11 +66,27 @@ API呼び出しは全ステップで再実行時にスキップされる冪等�
 | ステップ | 採用 | 代替 | 1本あたり費用目安 |
 | --- | --- | --- | --- |
 | 台本 | **Claude API（Web検索ツール付き）** | Perplexity API | 〜$0.5 |
-| 画像 | **DALL-E 3**（初期）→ FLUX via Replicate（量産期） | Midjourney(非公式APIのみ=規約違反リスク) | DALL-E3: 〜$2.4 / FLUX: 〜$0.1 |
+| 画像 | **Codex に委譲**（ChatGPT定額枠・CSV指示書経由） | DALL-E 3(〜$2.4) / FLUX via Replicate(〜$0.1)。Midjourneyは非公式APIのみ=規約違反リスクで不採用 | $0（定額内） |
 | 音声 | **OpenAI TTS (gpt-4o-mini-tts, nova)** + Whisper字幕 | ElevenLabs（高品質・文字単位タイムスタンプ） | OpenAI: 〜$0.5 / 11Labs: 月$22〜 |
 | 編集 | **MoviePy v2 + imageio-ffmpeg** | ffmpeg直叩き（速いが保守性低） | $0 |
 
-**合計: 1本 約$3.5（DALL-E 3構成）／ 約$1.1（FLUX構成）**
+**合計: 1本 約$1.0（API実費）+ ChatGPT/Claude の定額利用料**
+
+### ステップ2の運用フロー（Codex委譲）
+
+1. `python -m scripts.generate_images` → `data/prompts/image_prompts.csv` と
+   `data/prompts/CODEX_TASK.md` が生成される（CSVはスプレッドシートに
+   そのままインポート可能）
+2. Codex に `CODEX_TASK.md` を渡す（リポジトリを開かせて「このタスクを
+   実行しろ」だけでよい。ファイル名・保存先・仕様はすべて指示書にある）
+3. Codex が `assets/images/` に連番PNGを納品
+4. `python -m scripts.generate_images --check` で自動検収
+   （不足・低解像度・16:9でない画像を列挙 → Codexに差し戻し）
+
+Codex をローカル（CLI/デスクトップ）で動かせば画像は直接 `assets/images/`
+に書き込まれ、git を経由しない（推奨。画像30枚をコミットするとリポジトリが
+肥大化するため `.gitignore` 済み）。クラウド版 Codex に PR で納品させる場合
+のみ `.gitignore` の画像除外を一時的に外すこと。
 
 ## セットアップ
 

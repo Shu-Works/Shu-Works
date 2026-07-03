@@ -15,7 +15,8 @@ load_dotenv()
 # ─── パス ───
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS_DATA_DIR = PROJECT_ROOT / "data" / "scripts"      # 台本JSON
-IMAGES_DIR = PROJECT_ROOT / "assets" / "images"           # 生成画像
+PROMPTS_DIR = PROJECT_ROOT / "data" / "prompts"           # 画像プロンプトCSV+Codex指示書
+IMAGES_DIR = PROJECT_ROOT / "assets" / "images"           # 生成画像（Codexが納品）
 AUDIO_DIR = PROJECT_ROOT / "assets" / "audio"             # ナレーション音声
 BGM_DIR = PROJECT_ROOT / "assets" / "bgm"                 # BGM（手動配置）
 SUBTITLES_DIR = PROJECT_ROOT / "assets" / "subtitles"     # SRT字幕
@@ -29,7 +30,8 @@ REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN", "")
 
 # ─── プロバイダ切り替え ───
 TTS_PROVIDER = os.getenv("TTS_PROVIDER", "openai")        # "openai" | "elevenlabs"
-IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "dalle")     # "dalle" | "flux"
+# 画像は Codex（ChatGPT定額枠）に委譲。API課金に戻す場合のみ "dalle"/"flux"
+IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "codex")     # "codex" | "dalle" | "flux"
 
 # ─── ステップ1: 台本 ───
 SCRIPT_MODEL = "claude-sonnet-5"
@@ -40,7 +42,8 @@ TARGET_CHARS = (4500, 6000)
 
 # ─── ステップ2: 画像 ───
 IMAGES_PER_SECTION = 5             # 1章あたり3〜5枚
-IMAGE_SIZE = "1792x1024"           # DALL-E 3 の16:9相当
+IMAGE_SIZE = "1792x1024"           # DALL-E 3 の16:9相当（APIフォールバック用）
+MIN_IMAGE_WIDTH = 1280             # 検収時の最低幅（これ未満は不良品）
 # 世界観を統一する固定プロンプト（全画像に必ず付与）
 STYLE_PROMPT = (
     "CG-style illustration, dramatic and weighty atmosphere like the Japanese "
