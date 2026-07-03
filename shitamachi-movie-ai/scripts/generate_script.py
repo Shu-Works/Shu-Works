@@ -116,6 +116,10 @@ YouTube解説動画（15〜20分）の台本を書く。
 # 絶対原則
 - 実在の企業・実在の事実のみを扱う。Web検索で確認できた事実だけを書く。
   確認できない数字・取引先・エピソードは絶対に書かない（名誉毀損リスク）
+- 【チャンネルの憲法】「すごい」「世界が絶賛」「土下座」「日本の誇り」等の
+  称賛語・自画自賛の言葉をナレーションで使わない。事実と数字と物語だけを
+  積み、誇りを感じるのは視聴者の仕事として残す。プロジェクトXが
+  「日本すごい」と一度も言わずに視聴者を泣かせたのと同じ構造を守る
 - ナレーションは丁寧語（です・ます調）。聞き取りやすい放送用の文体。
   1文は短く。難しい漢語は開く。数字は必ず具体的に
 - 構成の型: ①冒頭の不安 → ②驚きの反転 → ③技術の解説（2章）→
@@ -160,16 +164,15 @@ hook 600 / reversal 800 / tech_1 1200 / tech_2 1200 / drama 1200 / ending 600
 """
 
 
-def build_research_prompt(topic: str | None) -> str:
+def build_research_prompt(topic: str | None, series: str) -> str:
+    focus = settings.SERIES[series]["research_focus"]
     if topic:
-        subject = f"題材は「{topic}」とする。この企業・技術についてWeb検索で徹底的に調べよ。"
-    else:
         subject = (
-            "まずWeb検索で「世界シェアトップ 日本 中小企業」「町工場 世界一 技術」"
-            "などを調べ、iPhone・EV・ロケット・半導体など世界の最先端製品の"
-            "命綱を握る実在の日本の無名中小企業を1社選定せよ。"
-            "有名すぎる大企業（トヨタ・ソニー等）は不可。"
+            f"題材は「{topic}」とする。この企業・技術についてWeb検索で徹底的に調べよ。\n"
+            f"シリーズの照準: {focus}"
         )
+    else:
+        subject = f"Web検索でリサーチし、以下の照準で題材を選定せよ。\n{focus}"
     return f"{subject}\n\nリサーチ結果をもとに台本を書け。\n\n{JSON_SPEC}"
 
 
@@ -279,7 +282,10 @@ def refine_hook(client: Anthropic, script: Script) -> tuple[Script, list[dict]]:
 # メイン
 # ─────────────────────────────────────────────
 
-def run(topic: str | None = None, force: bool = False, no_search: bool = False) -> None:
+def run(topic: str | None = None, force: bool = False, no_search: bool = False,
+        series: str = settings.DEFAULT_SERIES) -> None:
+    if series not in settings.SERIES:
+        sys.exit(f"series は {list(settings.SERIES)} のいずれか。'{series}' は不正")
     if LATEST_PATH.exists() and not force:
         existing = json.loads(LATEST_PATH.read_text(encoding="utf-8"))
         print(f"  台本は生成済み: 『{existing['title']}』 → スキップ（作り直すには --force）")
@@ -293,8 +299,9 @@ def run(topic: str | None = None, force: bool = False, no_search: bool = False) 
     if no_search:
         print("  [警告] Web検索なしモード。事実確認されていない台本になる。公開前の人間チェック必須")
 
+    print(f"  シリーズ: {settings.SERIES[series]['label']}")
     # 生成 → スキーマ検証 → 不合格ならエラー内容をフィードバックして再生成
-    prompt = build_research_prompt(topic)
+    prompt = build_research_prompt(topic, series)
     script: Script | None = None
     feedback = ""
     for attempt in range(1, 4):
@@ -327,6 +334,7 @@ def run(topic: str | None = None, force: bool = False, no_search: bool = False) 
     payload["_meta"] = {
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "model": settings.SCRIPT_MODEL,
+        "series": series,  # ステップ2が画像の質感（style_suffix）を切り替えるのに使う
         "web_search": use_search,
         "hook_candidates": candidates,
         "human_verified": False,  # 公開前に人間が sources と照合したら true にする
@@ -344,8 +352,11 @@ def run(topic: str | None = None, force: bool = False, no_search: bool = False) 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ステップ1: リサーチ・台本生成")
     parser.add_argument("--topic", default=None, help="題材の企業・技術（省略時は自動選定）")
+    parser.add_argument("--series", default=settings.DEFAULT_SERIES,
+                        choices=list(settings.SERIES),
+                        help="シリーズ: machikoba=町工場 / dento=伝統×ハイテク")
     parser.add_argument("--force", action="store_true", help="生成済みでも作り直す")
     parser.add_argument("--no-search", action="store_true",
                         help="Web検索を使わない（非推奨・事実未確認になる）")
     a = parser.parse_args()
-    run(topic=a.topic, force=a.force, no_search=a.no_search)
+    run(topic=a.topic, force=a.force, no_search=a.no_search, series=a.series)

@@ -19,6 +19,8 @@ def main() -> int:
                         help="このステップから再開する")
     parser.add_argument("--topic", type=str, default=None,
                         help="題材の企業・技術を指定（省略時はLLMが自動リサーチで選定）")
+    parser.add_argument("--series", type=str, default=None,
+                        help="シリーズ: machikoba=町工場 / dento=伝統×ハイテク")
     args = parser.parse_args()
 
     steps = [
@@ -39,7 +41,11 @@ def main() -> int:
         except ImportError:
             print(f"  [未実装] {module} はまだ存在しない。次の開発段階で実装する。")
             continue
-        mod.run(topic=args.topic)
+        kwargs = {"topic": args.topic}
+        # シリーズは台本生成だけが受け取る（以降のステップは台本JSONの_metaから読む）
+        if num == 1 and args.series:
+            kwargs["series"] = args.series
+        mod.run(**kwargs)
 
     return 0
 

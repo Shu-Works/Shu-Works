@@ -66,7 +66,12 @@ def load_script() -> dict:
 
 
 def build_rows(script: dict) -> list[dict]:
-    """台本の各章の image_prompts を、連番ファイル名付きの行に展開する。"""
+    """台本の各章の image_prompts を、連番ファイル名付きの行に展開する。
+
+    スタイルは「共通の世界観（STYLE_PROMPT）+ シリーズ固有の質感」の二層。
+    """
+    series = script.get("_meta", {}).get("series", settings.DEFAULT_SERIES)
+    style = f"{settings.STYLE_PROMPT}, {settings.SERIES[series]['style_suffix']}"
     rows = []
     for sec in script["sections"]:
         for i, prompt in enumerate(sec["image_prompts"], start=1):
@@ -75,7 +80,7 @@ def build_rows(script: dict) -> list[dict]:
                 "section_id": sec["id"],
                 "role": sec["role"],
                 "heading": sec["heading"],
-                "prompt": f"{prompt}, {settings.STYLE_PROMPT}",
+                "prompt": f"{prompt}, {style}",
             })
     return rows
 

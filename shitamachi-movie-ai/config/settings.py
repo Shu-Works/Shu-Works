@@ -44,12 +44,44 @@ TARGET_CHARS = (4500, 6000)
 IMAGES_PER_SECTION = 5             # 1章あたり3〜5枚
 IMAGE_SIZE = "1792x1024"           # DALL-E 3 の16:9相当（APIフォールバック用）
 MIN_IMAGE_WIDTH = 1280             # 検収時の最低幅（これ未満は不良品）
-# 世界観を統一する固定プロンプト（全画像に必ず付与）
+# 世界観を統一する共通プロンプト（全シリーズ・全画像に必ず付与）
 STYLE_PROMPT = (
     "CG-style illustration, dramatic and weighty atmosphere like the Japanese "
     "drama 'Shitamachi Rocket', cinematic movie-poster composition, "
     "16:9 aspect ratio, no text, no letters"
 )
+
+# ─── シリーズ定義（1チャンネル2シリーズ運用）───
+# チャンネルの看板:「無名の日本人の手が、世界を動かしている物語」
+# 構成の型（不安→反転→技術→ドラマ→誇り）は全シリーズ共通。
+# 変わるのはリサーチの照準と画像の質感だけ。
+SERIES = {
+    "machikoba": {
+        "label": "町工場・世界を支える無名企業",
+        "research_focus": (
+            "iPhone・EV・ロケット・半導体・AIチップなど世界の最先端製品の"
+            "命綱を握る、実在の日本の無名中小企業・町工場を1社選定せよ。"
+            "世界シェアの高いニッチ部品・素材・工程を持つ企業を優先する。"
+            "有名すぎる大企業（トヨタ・ソニー等）は不可。"
+        ),
+        "style_suffix": "modern precision factory, machinery and steel textures",
+    },
+    "dento": {
+        "label": "伝統×ハイテク・職人技が最先端を支える",
+        "research_focus": (
+            "宮大工・刀鍛冶・鋳物・漆・織物・和紙などの日本の伝統技術が、"
+            "宇宙開発・医療・半導体・耐震建築などの最先端分野で実際に"
+            "応用されている実在の事例・企業・工房を1つ選定せよ。"
+            "逸話の真偽に特に注意し、一次情報で確認できた事実のみ扱う"
+            "（『NASAが認めた』系の都市伝説を検証なしに使うことは禁止）。"
+        ),
+        "style_suffix": (
+            "traditional Japanese craftsmanship meets high technology, "
+            "warm wood, washi and forged steel textures"
+        ),
+    },
+}
+DEFAULT_SERIES = "machikoba"
 
 # ─── ステップ3: 音声 ───
 # OpenAI TTS: 落ち着いた知的な女性声に最も近いのは "nova"（"shimmer" も候補）
