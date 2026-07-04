@@ -81,32 +81,34 @@
   - [ ] テスト案件 `JT-2026-0000` で一周リハーサル
 
 ### 2.3 動画制作パイプライン（コア技術）
-- [x] パイプライン全体設計・ツールスタック選定 → `docs/production/00-overview.md`
-  - 月次コスト試算（直接費 約 3,200円/件、粗利率 92%）／月キャパシティ試算（月 5〜8 本）
+- [x] パイプライン全体設計・ツールスタック選定（v2.0 改訂済み）→ `docs/production/00-overview.md`
+  - 月次コスト試算（直接費 約 1,900円/件、粗利率 95%、月次固定費 約 4,400 円）／月キャパシティ試算（月 5〜8 本）
 - [x] 写真自動補正（AI 高解像度化・色補正）ワークフロー → `docs/production/01-photo-restoration.md`
-  - メイン：**Topaz Photo AI**（買切 約 3 万円）／補助：Adobe Photoshop
-- [x] **AI 中間フレーム補間（ブリッジング）の技術選定** → `docs/production/02-ai-bridging.md`
-  - メイン：**Kling AI**（Start+End Frame 機能）／サブ：Luma Dream Machine
-  - プロンプトテンプレ（用途別）、失敗パターン 4 種への対処手順を完備
+  - メイン：**Luminar Neo**（月 約 1,290 円・ローカル処理）※Topaz は買切廃止のため代替候補（$39/月）に降格
+- [x] **動画生成方式の設計（v2.0「動き × 編集」方式に全面改訂）** → `docs/production/02-ai-bridging.md`
+  - 第 1 層：各写真を 1 枚ずつ AI で動かす（**Kling AI Standard 約 $7/月**＋Google Flow 併用）
+  - 第 2 層：物語編集（**Filmora 所有済み**）／第 3 層：条件が合うペアのみ AI トランジション
+  - ※旧方式（写真 A→B の直接補間）は実機検証で破綻を確認し廃止（2026-07-04）
 - [x] **【想い出補完オプション】AI 画像生成パイプライン** → `docs/production/03-memory-fill.md`
   - メイン：**Midjourney + IP-Adapter**（顔特徴量保持）
   - ご家族確認フロー（候補提示 → 修正 → 承認 → 動画化 → 演出付与）
 - [x] **チャプター字幕テンプレート**（「○歳 ライフイベント」フォーマット）→ `production/04-editing-and-delivery.md` §3
 - [x] 制作用ヒアリングシート（人生の節目を整理）→ `docs/customer/hearing-sheet-production.md`
 - [x] テンプレート動画素材（オープニング・エンディング・トランジション）→ `production/04-editing-and-delivery.md` §5
-- [x] タイムラプス組み立て手順（DaVinci Resolve）→ `production/04-editing-and-delivery.md` §6
+- [x] タイムラプス組み立て手順（Filmora 前提に改訂済み）→ `production/04-editing-and-delivery.md` §6
 - [x] 編集者向け作業マニュアル → `production/04-editing-and-delivery.md` 全体
 - [x] 品質チェックリスト（15 項目）→ `production/04-editing-and-delivery.md` §7
 - [x] 納品物管理（DVD / Blu-ray / USB / クラウドリンク）→ `production/04-editing-and-delivery.md` §9-10
-- [ ] **パイロット制作 3 本の実施（公開前必須）**
-  - [ ] 1 本目：ご自身 or ご家族（全工程通し確認）
+- [ ] **パイロット制作の実施（公開前必須）**
+  - [ ] Pilot-0：写真 1 枚を Google Flow / Kling で動かす（v2.0 方式の最小検証・今夜できる）
+  - [ ] 1 本目：写真 5 枚で 1 本組む（Filmora 編集込み・全工程通し確認）
   - [ ] 2 本目：高齢のご家族（古い写真の補正品質）
-  - [ ] 3 本目：お友達のお子様（年齢差大の補間品質）
-- [ ] 編集環境セットアップ
-  - [ ] DaVinci Resolve 無料版インストール＆テンプレ作成
-  - [ ] Topaz Photo AI 購入
-  - [ ] Kling AI / Luma Dream Machine サブスクリプション開始
-  - [ ] Midjourney サブスクリプション開始
+  - [ ] 3 本目：お友達のお子様（写真ごとの動き品質・編集の物語性）
+- [ ] 編集環境セットアップ（v2.0 構成）
+  - [ ] Filmora（所有済み）でテンプレプロジェクト作成＆買切版 AI 機能の課金形態確認
+  - [ ] Luminar Neo 月次プラン契約（約 1,290 円）
+  - [ ] Kling AI Standard 契約（約 $7/月）
+  - [ ] Midjourney サブスクリプション開始（想い出補完オプション提供開始時のみ）
 
 ### 2.4 顧客管理
 - [ ] CRM 導入（HubSpot Free / kintone など低コスト案）
@@ -204,7 +206,7 @@
 
 ## 直近30日のマイルストーン
 
-1. **AI 中間フレーム補間ツールの選定＋3 パターンのサンプル動画試作**（最重要）
+1. **「動き × 編集」方式でのサンプル動画試作（Pilot-0：写真1枚を動かす → Pilot-1：5枚で1本組む）**（最重要）
 2. サービスサイト公開（LP・問い合わせフォーム）
 3. モニター 3 名分のサンプル動画制作（実写写真からの一気通貫制作）
 4. 葬儀社・写真館 5 社への提携提案

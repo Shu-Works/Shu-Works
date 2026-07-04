@@ -52,7 +52,7 @@
 
 ### 動画化：**Kling AI / Luma**
 
-- 生成した静止画を、AI 中間補間ツールで動かす
+- 生成した静止画を、image-to-video（Kling / Flow）で動かす
 - 静止画のままだと「合成感」が強く、動きを与えると馴染む
 
 ---
@@ -317,6 +317,6 @@ minimal facial expression change, photorealistic, dignified portrait.
 
 - 倫理ガイドライン：`docs/legal/06-ai-supplement-guideline.md`
 - AI 補完同意書：`docs/legal/05-ai-supplement-consent.md`
-- AI 中間補間：`production/02-ai-bridging.md`
+- 「動き × 編集」方式 v2.0：`production/02-ai-bridging.md`
 - 編集・字幕：`production/04-editing-and-delivery.md`
 - ヒアリングシート：`customer/hearing-sheet-production.md`
