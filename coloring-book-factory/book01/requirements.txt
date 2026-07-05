@@ -1,0 +1,5 @@
+# Coloring Book Factory · batch runner + packager dependencies
+openai>=1.40.0           # generate.py — DALL·E 3 image generation
+python-dotenv>=1.0.0     # generate.py — loads OPENAI_API_KEY from .env
+reportlab>=4.0.0         # package.py — print-ready PDF assembly
+Pillow>=10.0.0           # package.py — upscale + binarize line art
